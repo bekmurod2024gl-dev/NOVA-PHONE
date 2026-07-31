@@ -4,7 +4,7 @@ const API_URL = "https://novaphone-backend.onrender.com";
 
 const BRANDS = ["Apple", "Samsung", "Xiaomi", "Google", "OnePlus", "Huawei", "Realme", "Oppo", "Vivo"];
 
-const generateFallbackImage = (name) => {
+const generateFallbackImage = () => {
   return `data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 24 24' fill='none' stroke='%23f87171' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='2' width='14' height='20' rx='2' ry='2'/%3E%3Cline x1='12' y1='18' x2='12.01' y2='18'/%3E%3C/svg%3E`;
 };
 
@@ -42,7 +42,7 @@ function Products() {
     try {
       const saved = localStorage.getItem("nova_user_liked_v1");
       return saved ? JSON.parse(saved) : [];
-    } catch (error) {
+    } catch {
       return [];
     }
   });
@@ -51,7 +51,7 @@ function Products() {
     try {
       const saved = localStorage.getItem("nova_user_purchases_v1");
       return saved ? JSON.parse(saved) : [];
-    } catch (error) {
+    } catch {
       return [];
     }
   });
@@ -80,7 +80,7 @@ function Products() {
       productId: product.id,
       productName: product.name,
       brand: product.brand,
-      image: product.image,
+      image: `${API_URL}${product.image}`, // Buyurtmalar sahifasida rasm chiqishi uchun
       price: product.price,
       orderDate: new Date().toISOString().slice(0, 10),
       deliveryDate: getDeliveryDate(),
@@ -141,61 +141,62 @@ function Products() {
       )}
 
       {!loading && !error && (
-      <div className="products-grid">
-        {filtered.map((product) => {
-          const oldPrice = product.oldPrice ?? Math.round(product.price * 1.15);
-          const discount = product.discount ?? Math.round(((oldPrice - product.price) / oldPrice) * 100);
-          const rating = product.rating ?? 4.5;
+        <div className="products-grid">
+          {filtered.map((product) => {
+            const oldPrice = product.oldPrice ?? Math.round(product.price * 1.15);
+            const discount = product.discount ?? Math.round(((oldPrice - product.price) / oldPrice) * 100);
+            const rating = product.rating ?? 4.5;
 
-          return (
-          <div className="product-card" key={product.id}>
-            <div className="product-image">
-              <img
-                src={product.image}
-                alt={product.name}
-                loading="lazy"
-                style={{ backgroundColor: "#f8fafc", objectFit: "contain" }}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = generateFallbackImage(product.name);
-                }}
-              />
-              <span className="discount-badge">-{discount}%</span>
+            return (
+              <div className="product-card" key={product.id}>
+                <div className="product-image">
+                  {/* RASM MANZILIGA API_URL QO'SHILDI */}
+                  <img
+                    src={`${API_URL}${product.image}`}
+                    alt={product.name}
+                    loading="lazy"
+                    style={{ backgroundColor: "#f8fafc", objectFit: "contain" }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = generateFallbackImage();
+                    }}
+                  />
+                  <span className="discount-badge">-{discount}%</span>
 
-              <button
-                className={`shop-like-btn ${liked.includes(product.id) ? "liked" : ""}`}
-                onClick={() => toggleLike(product.id)}
-              >
-                {liked.includes(product.id) ? "❤️" : "♡"}
-              </button>
-            </div>
+                  <button
+                    className={`shop-like-btn ${liked.includes(product.id) ? "liked" : ""}`}
+                    onClick={() => toggleLike(product.id)}
+                  >
+                    {liked.includes(product.id) ? "❤️" : "♡"}
+                  </button>
+                </div>
 
-            <div className="product-info">
-              <div className="product-brand">{product.brand}</div>
-              <h2>{product.name}</h2>
-              <p className="product-description">{product.description}</p>
+                <div className="product-info">
+                  <div className="product-brand">{product.brand}</div>
+                  <h2>{product.name}</h2>
+                  <p className="product-description">{product.description}</p>
 
-              <div className="rating-row">
-                <span>⭐ {rating}</span>
+                  <div className="rating-row">
+                    <span>⭐ {rating}</span>
+                  </div>
+
+                  <div className="price-row">
+                    <del>{formatPrice(oldPrice)} so'm</del>
+                    <h3>{formatPrice(product.price)} so'm</h3>
+                  </div>
+
+                  <button
+                    className="shop-buy-btn"
+                    onClick={() => handleBuy(product)}
+                    disabled={justBought === product.id}
+                  >
+                    {justBought === product.id ? "✅ Savatga qo'shildi!" : "🛒 Sotib olish"}
+                  </button>
+                </div>
               </div>
-
-              <div className="price-row">
-                <del>{formatPrice(oldPrice)} so'm</del>
-                <h3>{formatPrice(product.price)} so'm</h3>
-              </div>
-
-              <button
-                className="shop-buy-btn"
-                onClick={() => handleBuy(product)}
-                disabled={justBought === product.id}
-              >
-                {justBought === product.id ? "✅ Savatga qo'shildi!" : "🛒 Sotib olish"}
-              </button>
-            </div>
-          </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
       )}
 
       {!loading && !error && filtered.length === 0 && (

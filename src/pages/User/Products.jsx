@@ -80,7 +80,7 @@ function Products() {
       productId: product.id,
       productName: product.name,
       brand: product.brand,
-      image: product.image,
+      image: `${API_URL}${product.image}`, // <-- BU YERDA TO'G'IRILDI
       price: product.price,
       orderDate: new Date().toISOString().slice(0, 10),
       deliveryDate: getDeliveryDate(),
@@ -116,86 +116,67 @@ function Products() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-
         <select value={brandFilter} onChange={(e) => setBrandFilter(e.target.value)}>
           <option value="all">Barcha brendlar</option>
           {BRANDS.map((brand) => (
-            <option key={brand} value={brand}>
-              {brand}
-            </option>
+            <option key={brand} value={brand}>{brand}</option>
           ))}
         </select>
       </div>
 
-      {loading && (
-        <div className="no-products">
-          <h2>⏳ Yuklanmoqda...</h2>
-        </div>
-      )}
-
-      {!loading && error && (
-        <div className="no-products">
-          <h2>⚠️ Xatolik</h2>
-          <p>{error}</p>
-        </div>
-      )}
+      {loading && <div className="no-products"><h2>⏳ Yuklanmoqda...</h2></div>}
+      {!loading && error && <div className="no-products"><h2>⚠️ Xatolik</h2><p>{error}</p></div>}
 
       {!loading && !error && (
-      <div className="products-grid">
-        {filtered.map((product) => {
-          const oldPrice = product.oldPrice ?? Math.round(product.price * 1.15);
-          const discount = product.discount ?? Math.round(((oldPrice - product.price) / oldPrice) * 100);
-          const rating = product.rating ?? 4.5;
+        <div className="products-grid">
+          {filtered.map((product) => {
+            const oldPrice = product.oldPrice ?? Math.round(product.price * 1.15);
+            const discount = product.discount ?? Math.round(((oldPrice - product.price) / oldPrice) * 100);
+            const rating = product.rating ?? 4.5;
 
-          return (
-          <div className="product-card" key={product.id}>
-            <div className="product-image">
-              <img
-                src={product.image}
-                alt={product.name}
-                loading="lazy"
-                style={{ backgroundColor: "#f8fafc", objectFit: "contain" }}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = generateFallbackImage(product.name);
-                }}
-              />
-              <span className="discount-badge">-{discount}%</span>
-
-              <button
-                className={`shop-like-btn ${liked.includes(product.id) ? "liked" : ""}`}
-                onClick={() => toggleLike(product.id)}
-              >
-                {liked.includes(product.id) ? "❤️" : "♡"}
-              </button>
-            </div>
-
-            <div className="product-info">
-              <div className="product-brand">{product.brand}</div>
-              <h2>{product.name}</h2>
-              <p className="product-description">{product.description}</p>
-
-              <div className="rating-row">
-                <span>⭐ {rating}</span>
+            return (
+              <div className="product-card" key={product.id}>
+                <div className="product-image">
+                  {/* RASM MANZILIGA API_URL QO'SHILDI */}
+                  <img
+                    src={`${API_URL}${product.image}`}
+                    alt={product.name}
+                    loading="lazy"
+                    style={{ backgroundColor: "#f8fafc", objectFit: "contain" }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = generateFallbackImage(product.name);
+                    }}
+                  />
+                  <span className="discount-badge">-{discount}%</span>
+                  <button
+                    className={`shop-like-btn ${liked.includes(product.id) ? "liked" : ""}`}
+                    onClick={() => toggleLike(product.id)}
+                  >
+                    {liked.includes(product.id) ? "❤️" : "♡"}
+                  </button>
+                </div>
+                <div className="product-info">
+                  <div className="product-brand">{product.brand}</div>
+                  <h2>{product.name}</h2>
+                  <p className="product-description">{product.description}</p>
+                  <div className="rating-row"><span>⭐ {rating}</span></div>
+                  <div className="price-row">
+                    <del>{formatPrice(oldPrice)} so'm</del>
+                    <h3>{formatPrice(product.price)} so'm</h3>
+                  </div>
+                  <button
+                    className="shop-buy-btn"
+                    onClick={() => handleBuy(product)}
+                    disabled={justBought === product.id}
+                  >
+                    {justBought === product.id ? "✅ Savatga qo'shildi!" : "🛒 Sotib olish"}
+                  </button>
+                </div>
               </div>
-
-              <div className="price-row">
-                <del>{formatPrice(oldPrice)} so'm</del>
-                <h3>{formatPrice(product.price)} so'm</h3>
-              </div>
-
-              <button
-                className="shop-buy-btn"
-                onClick={() => handleBuy(product)}
-                disabled={justBought === product.id}
-              >
-                {justBought === product.id ? "✅ Savatga qo'shildi!" : "🛒 Sotib olish"}
-              </button>
-            </div>
-          </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
       )}
 
       {!loading && !error && filtered.length === 0 && (
