@@ -1,61 +1,6 @@
 import { useEffect, useState } from "react";
 
-// RASMLAR FAQAT SIZNING FAYLLARINGIZ NOMIGA MOSLASHTIRILDI
-const catalog = [
-  // APPLE
-  { id: 1, name: "iPhone 15 Pro", brand: "Apple", category: "Apple", price: 12500000, oldPrice: 15000000, discount: 17, rating: 4.9, liked: 124, stock: 25, image: "/images/iphone15pro.jpeg", description: "Titan korpusli premium iPhone." },
-  { id: 2, name: "iPhone 15", brand: "Apple", category: "Apple", price: 9800000, oldPrice: 11000000, discount: 11, rating: 4.8, liked: 85, stock: 40, image: "/images/15.jpeg", description: "Dynamic Island bilan yangi avlod iPhone." },
-  { id: 3, name: "iPhone 14 Pro Max", brand: "Apple", category: "Apple", price: 11900000, oldPrice: 14000000, discount: 15, rating: 4.8, liked: 215, stock: 12, image: "/images/14promax.jpeg", description: "Katta ekran va kuchli kamera." },
-  { id: 4, name: "iPhone 13", brand: "Apple", category: "Apple", price: 7500000, oldPrice: 8500000, discount: 12, rating: 4.6, liked: 150, stock: 30, image: "/images/13.jpeg", description: "Eng ommabop Apple smartfoni." },
-  
-  // SAMSUNG
-  { id: 5, name: "Samsung Galaxy S24 Ultra", brand: "Samsung", category: "Samsung", price: 14500000, oldPrice: 17000000, discount: 15, rating: 4.9, liked: 120, stock: 18, image: "/images/samsung.jpeg", description: "Galaxy AI va S Pen bilan." },
-  { id: 6, name: "Samsung Galaxy S24+", brand: "Samsung", category: "Samsung", price: 11200000, oldPrice: 13000000, discount: 14, rating: 4.7, liked: 64, stock: 22, image: "/images/24+.jpeg", description: "Premium Samsung flagmani." },
-  { id: 7, name: "Samsung Galaxy A55", brand: "Samsung", category: "Samsung", price: 4600000, oldPrice: 5200000, discount: 12, rating: 4.5, liked: 189, stock: 65, image: "/images/a55.jpeg", description: "O'rta klassdagi kuchli telefon." },
-  { id: 8, name: "Samsung Z Flip5", brand: "Samsung", category: "Samsung", price: 9500000, oldPrice: 11000000, discount: 14, rating: 4.5, liked: 78, stock: 14, image: "/images/flip.jpeg", description: "Buklama Samsung telefoni." },
-  
-  // XIAOMI
-  { id: 9, name: "Xiaomi 14 Ultra", brand: "Xiaomi", category: "Xiaomi", price: 10500000, oldPrice: 12000000, discount: 13, rating: 4.8, liked: 76, stock: 22, image: "/images/ultra.jpeg", description: "Leica kamerali Xiaomi." },
-  { id: 10, name: "Redmi Note 13 Pro+", brand: "Xiaomi", category: "Xiaomi", price: 4400000, oldPrice: 5000000, discount: 12, rating: 4.5, liked: 245, stock: 80, image: "/images/note13.jpeg", description: "200MP kamerali Redmi." },
-  { id: 11, name: "Poco F6 Pro", brand: "Xiaomi", category: "Xiaomi", price: 5800000, oldPrice: 6500000, discount: 11, rating: 4.7, liked: 134, stock: 35, image: "/images/pocco.jpeg", description: "Snapdragon protsessorli Poco." },
-  { id: 12, name: "Redmi 13C", brand: "Xiaomi", category: "Xiaomi", price: 1600000, oldPrice: 1900000, discount: 16, rating: 4.3, liked: 412, stock: 120, image: "/images/redmic.jpeg", description: "Hamyonbop Redmi telefoni." },
-  
-  // GOOGLE
-  { id: 13, name: "Google Pixel 8 Pro", brand: "Google", category: "Google", price: 10200000, oldPrice: 12000000, discount: 15, rating: 4.8, liked: 115, stock: 14, image: "/images/google7.jpeg", description: "Toza Android tajribasi." },
-  { id: 14, name: "Google Pixel 8", brand: "Google", category: "Google", price: 7800000, oldPrice: 8900000, discount: 12, rating: 4.6, liked: 88, stock: 20, image: "/images/google.jpeg", description: "Google flagmani." },
-  { id: 15, name: "Google Pixel 7a", brand: "Google", category: "Google", price: 4900000, oldPrice: 5500000, discount: 11, rating: 4.5, liked: 142, stock: 28, image: "/images/google7.jpeg", description: "Pixel kamerasi bilan." },
-  { id: 16, name: "Google Pixel Fold", brand: "Google", category: "Google", price: 15500000, oldPrice: 18000000, discount: 14, rating: 4.4, liked: 31, stock: 5, image: "/images/fold.jpeg", description: "Buklama Pixel." },
-  
-  // ONEPLUS
-  { id: 17, name: "OnePlus 12", brand: "OnePlus", category: "OnePlus", price: 9200000, oldPrice: 10500000, discount: 12, rating: 4.8, liked: 89, stock: 16, image: "/images/oneplus.jpeg", description: "Flagman OnePlus." },
-  { id: 18, name: "OnePlus 12R", brand: "OnePlus", category: "OnePlus", price: 6200000, oldPrice: 7000000, discount: 11, rating: 4.6, liked: 73, stock: 24, image: "/images/oneplusR.jpeg", description: "Narx va sifat bo'yicha zo'r." },
-  { id: 19, name: "OnePlus Nord 4", brand: "OnePlus", category: "OnePlus", price: 4500000, oldPrice: 5100000, discount: 12, rating: 4.5, liked: 52, stock: 45, image: "/images/nord4.jpeg", description: "Metall korpusli zamonaviy OnePlus." },
-  { id: 20, name: "OnePlus Nord CE 4", brand: "OnePlus", category: "OnePlus", price: 3500000, oldPrice: 3900000, discount: 10, rating: 4.4, liked: 61, stock: 50, image: "/images/CE.jpeg", description: "100W tezkor quvvatlashga ega." },
-  
-  // HUAWEI
-  { id: 21, name: "Huawei Pura 70 Ultra", brand: "Huawei", category: "Huawei", price: 13500000, oldPrice: 16000000, discount: 16, rating: 4.9, liked: 61, stock: 7, image: "/images/huavie.jpeg", description: "Professional kamerali Huawei." },
-  { id: 22, name: "Huawei Mate 60 Pro", brand: "Huawei", category: "Huawei", price: 11000000, oldPrice: 12500000, discount: 12, rating: 4.7, liked: 49, stock: 10, image: "/images/mate.jpeg", description: "Kirin protsessorli flagman." },
-  { id: 23, name: "Huawei Nova 12 Pro", brand: "Huawei", category: "Huawei", price: 5900000, oldPrice: 6700000, discount: 12, rating: 4.5, liked: 74, stock: 15, image: "/images/huavienna.jpeg", description: "Selfi kamerasi bilan mashhur." },
-  { id: 24, name: "Huawei Mate X5", brand: "Huawei", category: "Huawei", price: 19500000, oldPrice: 22000000, discount: 11, rating: 4.6, liked: 25, stock: 4, image: "/images/x5.jpeg", description: "Buklama premium telefon." },
-  
-  // REALME
-  { id: 25, name: "Realme GT 6", brand: "Realme", category: "Realme", price: 6400000, oldPrice: 7200000, discount: 11, rating: 4.6, liked: 83, stock: 33, image: "/images/gt.jpeg", description: "Kuchli Snapdragon protsessori." },
-  { id: 26, name: "Realme 12 Pro Plus", brand: "Realme", category: "Realme", price: 4300000, oldPrice: 4900000, discount: 12, rating: 4.5, liked: 114, stock: 55, image: "/images/realme.jpeg", description: "Periskop kamerali model." },
-  { id: 27, name: "Realme C67", brand: "Realme", category: "Realme", price: 2100000, oldPrice: 2400000, discount: 13, rating: 4.3, liked: 230, stock: 90, image: "/images/c67.jpeg", description: "108MP kamerali budjet telefon." },
-  { id: 28, name: "Realme 12 5G", brand: "Realme", category: "Realme", price: 2800000, oldPrice: 3200000, discount: 13, rating: 4.4, liked: 91, stock: 42, image: "/images/5g.jpeg", description: "5G qo'llab-quvvatlovchi model." },
-  
-  // OPPO
-  { id: 29, name: "Oppo Find X7 Ultra", brand: "Oppo", category: "Oppo", price: 11500000, oldPrice: 13000000, discount: 12, rating: 4.8, liked: 41, stock: 9, image: "/images/x7Ultra.jpeg", description: "Premium Oppo flagmani." },
-  { id: 30, name: "Oppo Reno 12 Pro", brand: "Oppo", category: "Oppo", price: 5400000, oldPrice: 6200000, discount: 13, rating: 4.5, liked: 67, stock: 38, image: "/images/30pro.jpeg", description: "AI kamerali zamonaviy model." },
-  { id: 31, name: "Oppo A78", brand: "Oppo", category: "Oppo", price: 2300000, oldPrice: 2600000, discount: 12, rating: 4.4, liked: 154, stock: 75, image: "/images/a78.jpeg", description: "AMOLED displeyli telefon." },
-  { id: 32, name: "Oppo Find N3 Flip", brand: "Oppo", category: "Oppo", price: 9900000, oldPrice: 11500000, discount: 14, rating: 4.6, liked: 48, stock: 11, image: "/images/n3.jpeg", description: "Buklama Oppo telefoni." },
-  
-  // VIVO
-  { id: 33, name: "Vivo X100 Pro", brand: "Vivo", category: "Vivo", price: 10800000, oldPrice: 12500000, discount: 14, rating: 4.8, liked: 59, stock: 11, image: "/images/vivo.jpeg", description: "Zeiss kamerali Vivo." },
-  { id: 34, name: "Vivo V30 Pro", brand: "Vivo", category: "Vivo", price: 5600000, oldPrice: 6300000, discount: 11, rating: 4.6, liked: 92, stock: 42, image: "/images/30pro.jpeg", description: "Aura Light chirog'iga ega portret ustasi." },
-  { id: 35, name: "Vivo Y200 5G", brand: "Vivo", category: "Vivo", price: 3100000, oldPrice: 3500000, discount: 11, rating: 4.3, liked: 104, stock: 60, image: "/images/5g.jpeg", description: "Chiroyli orqa panelli yupqa dizayn." },
-  { id: 36, name: "Vivo T2x 5G", brand: "Vivo", category: "Vivo", price: 1900000, oldPrice: 2200000, discount: 14, rating: 4.2, liked: 178, stock: 88, image: "/images/t2x.jpeg", description: "Hamyonbop va tezkor 5G smartfon." }
-];
+const API_URL = "http://127.0.0.1:8000";
 
 const BRANDS = ["Apple", "Samsung", "Xiaomi", "Google", "OnePlus", "Huawei", "Realme", "Oppo", "Vivo"];
 
@@ -71,6 +16,28 @@ function getDeliveryDate() {
 }
 
 function Products() {
+  const [catalog, setCatalog] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${API_URL}/products/`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Server javob bermadi");
+        return res.json();
+      })
+      .then((data) => {
+        setCatalog(data);
+        setError(null);
+      })
+      .catch((err) => {
+        console.error("Mahsulotlarni olishda xatolik:", err);
+        setError("Mahsulotlarni yuklab bo'lmadi. Backend ishlab turganini tekshiring.");
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   const [liked, setLiked] = useState(() => {
     try {
       const saved = localStorage.getItem("nova_user_liked_v1");
@@ -160,21 +127,40 @@ function Products() {
         </select>
       </div>
 
+      {loading && (
+        <div className="no-products">
+          <h2>⏳ Yuklanmoqda...</h2>
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="no-products">
+          <h2>⚠️ Xatolik</h2>
+          <p>{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && (
       <div className="products-grid">
-        {filtered.map((product) => (
+        {filtered.map((product) => {
+          const oldPrice = product.oldPrice ?? Math.round(product.price * 1.15);
+          const discount = product.discount ?? Math.round(((oldPrice - product.price) / oldPrice) * 100);
+          const rating = product.rating ?? 4.5;
+
+          return (
           <div className="product-card" key={product.id}>
             <div className="product-image">
               <img
                 src={product.image}
                 alt={product.name}
-                loading="lazy" 
+                loading="lazy"
                 style={{ backgroundColor: "#f8fafc", objectFit: "contain" }}
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = generateFallbackImage(product.name);
                 }}
               />
-              <span className="discount-badge">-{product.discount}%</span>
+              <span className="discount-badge">-{discount}%</span>
 
               <button
                 className={`shop-like-btn ${liked.includes(product.id) ? "liked" : ""}`}
@@ -190,11 +176,11 @@ function Products() {
               <p className="product-description">{product.description}</p>
 
               <div className="rating-row">
-                <span>⭐ {product.rating}</span>
+                <span>⭐ {rating}</span>
               </div>
 
               <div className="price-row">
-                <del>{formatPrice(product.oldPrice)} so'm</del>
+                <del>{formatPrice(oldPrice)} so'm</del>
                 <h3>{formatPrice(product.price)} so'm</h3>
               </div>
 
@@ -207,10 +193,12 @@ function Products() {
               </button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
+      )}
 
-      {filtered.length === 0 && (
+      {!loading && !error && filtered.length === 0 && (
         <div className="no-products">
           <h2>😔 Mahsulot topilmadi</h2>
           <p>Boshqa nom yoki brend bilan qidirib ko'ring.</p>
