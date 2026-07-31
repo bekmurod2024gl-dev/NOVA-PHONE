@@ -2,17 +2,17 @@ import { Routes, Route } from "react-router-dom";
 
 import Login from "../pages/Auth/Login";
 
-import UserDashboard from "../pages/user/UserDashboard";
-import Products from "../pages/user/Products";
-import Liked from "../pages/user/Liked";
-import Buy from "../pages/user/Buy";
-import UserLayout from "../pages/user/UserLayout";
+import UserLayout from "../pages/User/UserLayout";
+import UserDashboard from "../pages/User/UserDashboard";
+import Products from "../pages/User/Products";
+import Liked from "../pages/User/Liked";
+import Buy from "../pages/User/Buy";
 
 import ManagerDashboard from "../pages/Manager/ManagerDashboard";
 import Approvals from "../pages/Manager/Approvals";
 import Attendance from "../pages/Manager/Attendance";
 import Reviews from "../pages/Manager/Reviews";
-import DamagedItems from "../pages/Manager/DamagedItems";
+import DamagedItems from "../pages/Manager/Damageditems";
 
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import AdminProducts from "../pages/Admin/Products";
@@ -26,6 +26,7 @@ import Promotions from "../pages/Admin/Promotions";
 import Settings from "../pages/Admin/Settings";
 
 import DashboardLayout from "../layouts/DashboardLayout";
+
 function AppRoutes() {
   return (
     <Routes>
