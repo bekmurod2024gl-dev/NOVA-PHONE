@@ -6,9 +6,10 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 # Local kompyuterda bu o'zgaruvchi bo'lmagani uchun SQLite ishlatiladi.
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./novaphone.db")
 
-# Render ba'zan "postgres://" prefiksini beradi, SQLAlchemy esa "postgresql://" talab qiladi
 if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
