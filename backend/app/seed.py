@@ -1,11 +1,6 @@
 from app.database import SessionLocal, Base, engine
 from app.models.product import Product
 
-# Jadvallar mavjudligiga ishonch hosil qilamiz
-Base.metadata.create_all(bind=engine)
-
-db = SessionLocal()
-
 catalog = [
     {"name": "iPhone 15 Pro", "brand": "Apple", "category": "Apple", "price": 12500000, "stock": 25, "image": "/images/iphone15pro.jpeg", "description": "Titan korpusli premium iPhone."},
     {"name": "iPhone 15", "brand": "Apple", "category": "Apple", "price": 9800000, "stock": 40, "image": "/images/15.jpeg", "description": "Dynamic Island bilan yangi avlod iPhone."},
@@ -53,13 +48,24 @@ catalog = [
     {"name": "Vivo T2x 5G", "brand": "Vivo", "category": "Vivo", "price": 1900000, "stock": 88, "image": "/images/t2x.jpeg", "description": "Hamyonbop va tezkor 5G smartfon."},
 ]
 
-# Bazada allaqachon mahsulot bo'lsa, qayta qo'shmaymiz
-if db.query(Product).count() == 0:
-    for item in catalog:
-        db.add(Product(**item))
-    db.commit()
-    print(f"✅ {len(catalog)} ta mahsulot bazaga qo'shildi!")
-else:
-    print("⚠️ Bazada mahsulotlar allaqachon bor, seed o'tkazilmadi.")
 
-db.close()
+def run_seed():
+    """Bazani 36 ta telefon bilan to'ldiradi. Ikkinchi marta ishga tushirilsa, qayta qo'shmaydi."""
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        existing_count = db.query(Product).count()
+        if existing_count == 0:
+            for item in catalog:
+                db.add(Product(**item))
+            db.commit()
+            return {"success": True, "message": f"{len(catalog)} ta mahsulot bazaga qo'shildi!"}
+        else:
+            return {"success": False, "message": f"Bazada allaqachon {existing_count} ta mahsulot bor, seed o'tkazilmadi."}
+    finally:
+        db.close()
+
+
+if __name__ == "__main__":
+    result = run_seed()
+    print(result["message"])

@@ -6,6 +6,7 @@ from app.models.product import Product
 from app.models.user import User
 from app.routers.products import router as products_router
 from app.routers.auth import router as auth_router
+from app.seed import run_seed
 
 Base.metadata.create_all(bind=engine)
 
@@ -47,3 +48,8 @@ def health():
         "status": "OK",
         "server": "Running"
     }
+
+
+@app.get("/seed-database-once")
+def seed_database():
+    return run_seed()
