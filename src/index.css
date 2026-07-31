@@ -1796,3 +1796,785 @@ button:hover {
     padding: 20px;
   }
 }
+/* ============================= */
+/* MANAGER DASHBOARD             */
+/* ============================= */
+
+.manager-page {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  color: white;
+}
+
+/* BANNER */
+
+.manager-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 34px;
+  border-radius: 24px;
+  background: linear-gradient(120deg, #4338ca, #6d28d9 60%, #7c3aed);
+  position: relative;
+  overflow: hidden;
+}
+
+.manager-banner::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.manager-banner::after {
+  content: "";
+  position: absolute;
+  bottom: -40%;
+  right: 15%;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.manager-banner > div {
+  position: relative;
+  z-index: 1;
+}
+
+.manager-banner-tag {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #c7d2fe;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+}
+
+.manager-banner h1 {
+  margin-bottom: 8px;
+  font-size: 28px;
+}
+
+.manager-banner p {
+  color: #ddd6fe;
+  font-size: 14px;
+}
+
+.manager-banner-figure {
+  font-size: 64px;
+  opacity: 0.25;
+  position: relative;
+  z-index: 1;
+}
+
+/* HORIZONTAL STAT STRIP */
+
+.manager-stat-strip {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 22px 30px;
+  border-radius: 20px;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.manager-stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.manager-stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #a78bfa;
+}
+
+.manager-stat-value.accent-warn {
+  color: #fbbf24;
+}
+
+.manager-stat-value.accent-ok {
+  color: #4ade80;
+}
+
+.manager-stat-label {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.manager-stat-divider {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* FINANCE ROW */
+
+.manager-finance-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.finance-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 18px;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: 0.3s ease;
+}
+
+.finance-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.finance-icon {
+  width: 55px;
+  height: 55px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  font-size: 26px;
+}
+
+.finance-profit {
+  border-left: 4px solid #22c55e;
+}
+
+.finance-profit .finance-icon {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.finance-profit h2 {
+  color: #4ade80;
+}
+
+.finance-revenue {
+  border-left: 4px solid #6366f1;
+}
+
+.finance-revenue .finance-icon {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.finance-revenue h2 {
+  color: #a78bfa;
+}
+
+.finance-loss {
+  border-left: 4px solid #ef4444;
+}
+
+.finance-loss .finance-icon {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.finance-loss h2 {
+  color: #f87171;
+}
+
+.finance-card p {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.finance-card h2 {
+  font-size: 22px;
+}
+
+.finance-card h2 span {
+  font-size: 13px;
+  font-weight: normal;
+  color: #94a3b8;
+}
+
+/* PRIORITY PANELS */
+
+.manager-priority-panel {
+  margin-bottom: 24px;
+  padding: 26px;
+  border-radius: 20px;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.manager-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.manager-panel-header h2 {
+  font-size: 19px;
+}
+
+.manager-panel-count {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(99, 102, 241, 0.12);
+  color: #a78bfa;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* EMPTY STATE */
+
+.manager-empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.manager-empty-state span {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 40px;
+}
+
+.manager-empty-state p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* APPROVAL LIST */
+
+.manager-approval-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.manager-approval-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: 0.3s;
+}
+
+.manager-approval-card:hover {
+  border-color: rgba(129, 140, 248, 0.4);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.manager-approval-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.manager-approval-avatar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  font-size: 20px;
+}
+
+.manager-approval-info h4 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.manager-approval-info p {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-bottom: 3px;
+}
+
+.manager-approval-info p span {
+  color: #a78bfa;
+  font-weight: bold;
+}
+
+.manager-approval-time {
+  color: #64748b;
+  font-size: 12px;
+}
+
+/* APPROVAL ACTION BUTTONS */
+
+.manager-approval-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.manager-approve-btn {
+  width: auto;
+  padding: 10px 18px;
+  border-radius: 10px;
+  color: white;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: 0.3s;
+}
+
+.manager-approve-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.35);
+}
+
+.manager-reject-btn {
+  width: auto;
+  padding: 10px 18px;
+  border-radius: 10px;
+  color: white;
+  background: rgba(239, 68, 68, 0.15);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: 0.3s;
+}
+
+.manager-reject-btn:hover {
+  color: white;
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+}
+
+/* WIDGETS ROW (Damaged + Low Stock) */
+
+.manager-widgets-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.manager-widget {
+  padding: 24px;
+  border-radius: 20px;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.manager-widget h3 {
+  margin-bottom: 18px;
+  font-size: 17px;
+}
+
+.manager-widget-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.manager-widget-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  border-radius: 12px;
+  background: #0f172a;
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+.manager-widget-list li strong {
+  color: #fbbf24;
+  font-size: 14px;
+}
+
+/* DAMAGED LIST (specific) */
+
+.damaged-list li {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.damaged-item strong {
+  color: #e2e8f0;
+  font-size: 14px;
+}
+
+.damaged-item p {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.damaged-date {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.damaged-item .accent-danger {
+  color: #f87171;
+  font-weight: bold;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* ACCENT HELPERS */
+
+.accent-warn {
+  color: #fbbf24 !important;
+}
+
+.accent-ok {
+  color: #4ade80 !important;
+}
+
+.accent-danger {
+  color: #f87171 !important;
+}
+
+/* ============================= */
+/* REVIEW CARDS (shared)         */
+/* ============================= */
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.review-card {
+  padding: 20px;
+  border-radius: 16px;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid #a78bfa;
+  transition: 0.3s;
+}
+
+.review-card:hover {
+  border-left-color: #6366f1;
+  transform: translateX(4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.review-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.review-top h4 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.review-product {
+  color: #818cf8;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.review-stars {
+  color: #fbbf24;
+  font-size: 16px;
+  letter-spacing: 2px;
+  flex-shrink: 0;
+}
+
+.review-comment {
+  color: #cbd5e1;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+  font-style: italic;
+}
+
+.review-time {
+  color: #64748b;
+  font-size: 12px;
+}
+
+/* REVIEW CARD INSIDE DASHBOARD (no left border override) */
+
+.manager-priority-panel .review-card {
+  background: #0f172a;
+  border-left-width: 3px;
+}
+
+.manager-priority-panel .review-card:hover {
+  transform: translateX(3px);
+}
+
+/* ============================= */
+/* ATTENDANCE (dashboard mini)   */
+/* ============================= */
+
+.attendance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attendance-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: 0.3s;
+}
+
+.attendance-row:hover {
+  border-color: rgba(129, 140, 248, 0.3);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.attendance-row .manager-approval-info {
+  flex: 1.5;
+  min-width: 0;
+}
+
+.attendance-row .manager-approval-avatar {
+  background: linear-gradient(135deg, #6366f1, #a78bfa);
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+}
+
+.attendance-checkin,
+.attendance-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: center;
+  flex: 0.7;
+}
+
+.attendance-label {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.attendance-checkin strong,
+.attendance-tasks strong {
+  color: #e2e8f0;
+  font-size: 14px;
+}
+
+/* SATISFACTION BADGES */
+
+.satisfaction-happy {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.12);
+}
+
+.satisfaction-neutral {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+}
+
+.satisfaction-sad {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.12);
+}
+
+/* ============================= */
+/* ATTENDANCE (full page)        */
+/* ============================= */
+
+.employee-row {
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.4fr 1.6fr;
+}
+
+.employee-row .order-actions-cell .delete-button,
+.employee-row .order-actions-cell .edit-button {
+  width: 100%;
+  white-space: nowrap;
+  font-size: 11px;
+  padding: 8px 10px;
+}
+
+/* ============================= */
+/* APPROVALS PAGE INLINE BTNS    */
+/* ============================= */
+
+.order-actions-cell .edit-button,
+.order-actions-cell .delete-button {
+  width: auto;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.order-actions-cell .edit-button {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.order-actions-cell .edit-button:hover {
+  color: white;
+  background: #16a34a;
+}
+
+/* ============================= */
+/* MANAGER RESPONSIVE            */
+/* ============================= */
+
+@media (max-width: 1100px) {
+  .manager-finance-row {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-widgets-row {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .attendance-checkin,
+  .attendance-tasks {
+    flex: 1 1 30%;
+  }
+}
+
+@media (max-width: 900px) {
+  .manager-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 24px;
+  }
+
+  .manager-banner h1 {
+    font-size: 22px;
+  }
+
+  .manager-stat-strip {
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 16px 20px;
+  }
+
+  .manager-stat-item {
+    flex: 1 1 40%;
+  }
+
+  .manager-stat-divider {
+    display: none;
+  }
+
+  .manager-approval-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .manager-approval-actions {
+    width: 100%;
+  }
+
+  .manager-approval-actions button {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+@media (max-width: 800px) {
+  .employee-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .employee-row .order-actions-cell {
+    width: 100%;
+  }
+
+  .employee-row .order-actions-cell button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .manager-banner {
+    padding: 20px;
+  }
+
+  .manager-banner h1 {
+    font-size: 20px;
+  }
+
+  .manager-priority-panel {
+    padding: 18px;
+  }
+
+  .manager-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .finance-card {
+    padding: 18px;
+  }
+
+  .finance-card h2 {
+    font-size: 18px;
+  }
+
+  .review-card {
+    padding: 16px;
+  }
+
+  .attendance-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .attendance-checkin,
+  .attendance-tasks {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .attendance-checkin:last-of-type,
+  .attendance-tasks:last-of-type {
+    border-bottom: none;
+  }
+}
