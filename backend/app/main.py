@@ -7,7 +7,6 @@ from app.models.user import User
 from app.routers.products import router as products_router
 from app.routers.auth import router as auth_router
 
-# Database jadvallarini yaratish
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -16,19 +15,19 @@ app = FastAPI(
     description="NOVA-PHONE Management System Backend"
 )
 
-# React frontend bilan ulanish uchun CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",  # Vite
+        "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "https://nova-phone-39pg.vercel.app",
+        "https://nova-phone-39pg-git-main-bekmurod.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Routerlarni ulash
 app.include_router(products_router)
 app.include_router(auth_router)
 
@@ -37,7 +36,7 @@ app.include_router(auth_router)
 def home():
     return {
         "success": True,
-        "message": "🚀 NOVA-PHONE Backend ishlayapti!",
+        "message": "NOVA-PHONE Backend ishlayapti!",
         "version": "1.0.0"
     }
 
