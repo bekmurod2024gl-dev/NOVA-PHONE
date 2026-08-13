@@ -1,4 +1,4 @@
-import { HashRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
 import { LocaleProvider } from "./context/LocaleContext";
 import { useEffect } from "react";
@@ -16,9 +16,9 @@ function AppInner() {
   }, []);
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <AppRoutes />
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
