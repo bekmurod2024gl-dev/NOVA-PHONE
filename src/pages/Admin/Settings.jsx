@@ -72,6 +72,13 @@ function Settings() {
     localStorage.setItem("nova_settings_v1", JSON.stringify(settings));
   }, [settings]);
 
+  useEffect(() => {
+    try {
+      const accent = settings?.appearance?.accent;
+      if (accent) document.documentElement.style.setProperty("--accent", accent);
+    } catch {}
+  }, [settings?.appearance?.accent]);
+
   const updateField = (section, field, value) => {
     setSettings((prev) => ({
       ...prev,

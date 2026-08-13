@@ -10,7 +10,7 @@ const catalog = [
     oldPrice: 22000000,
     discount: 11,
     rating: 4.9,
-    image: "https://placehold.co/400x400/0f766e/ffffff?text=iPhone+16+Pro+Max",
+    image: "/images/iphone15pro.jpeg",
     description: "Apple kompaniyasining iPhone 16 Pro Max modeli — zamonaviy dizayn va yuqori unumdorlik.",
   },
   {
@@ -21,7 +21,7 @@ const catalog = [
     oldPrice: 19500000,
     discount: 12,
     rating: 4.9,
-    image: "https://placehold.co/400x400/7c3aed/ffffff?text=iPhone+16+Pro",
+    image: "/images/15.jpeg",
     description: "Apple kompaniyasining iPhone 16 Pro modeli — zamonaviy dizayn va yuqori unumdorlik.",
   },
   {
@@ -32,7 +32,7 @@ const catalog = [
     oldPrice: 15500000,
     discount: 11,
     rating: 4.8,
-    image: "https://placehold.co/400x400/b91c1c/ffffff?text=iPhone+16",
+    image: "/images/14promax.jpeg",
     description: "Apple kompaniyasining iPhone 16 modeli — zamonaviy dizayn va yuqori unumdorlik.",
   },
   {

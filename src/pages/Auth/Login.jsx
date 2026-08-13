@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../index.css";
+import { useLocale } from "../../context/LocaleContext";
 
 function Login() {
   const navigate = useNavigate();
@@ -8,6 +9,7 @@ function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const { t } = useLocale();
 
   function handleLogin(event) {
     event.preventDefault();
@@ -35,7 +37,7 @@ function Login() {
 
     // Maxsus username'lar noto'g'ri password bilan
     if (cleanUsername === "bobomurod" || cleanUsername === "manager") {
-      setError("Username yoki password noto'g'ri!");
+      setError(t("username") + " yoki password noto'g'ri!");
       return;
     }
 
@@ -56,26 +58,26 @@ function Login() {
       <div className="login-card">
         <div className="brand">📱</div>
 
-        <h1>Mobile Store</h1>
+          <h1>{t("mobile_store")}</h1>
 
-        <p className="login-subtitle">Xush kelibsiz! Davom etish uchun tizimga kiring.</p>
+          <p className="login-subtitle">{t("login_welcome")}</p>
 
         <form onSubmit={handleLogin}>
           <div className="input-group">
-            <label>Username</label>
+          <label>{t("username")}</label>
             <input
               type="text"
-              placeholder="Username kiriting"
+              placeholder={t("username") + " kiriting"}
               value={username}
               onChange={(event) => setUsername(event.target.value)}
             />
           </div>
 
           <div className="input-group">
-            <label>Password</label>
+            <label>{t("password")}</label>
             <input
               type="password"
-              placeholder="Password kiriting"
+              placeholder={t("password") + " kiriting"}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
@@ -83,7 +85,7 @@ function Login() {
 
           {error && <p className="error-message">{error}</p>}
 
-          <button type="submit">Sign In</button>
+          <button type="submit">{t("sign_in")}</button>
         </form>
       </div>
     </div>

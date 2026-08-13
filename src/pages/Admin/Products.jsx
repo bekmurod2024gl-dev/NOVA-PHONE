@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../context/LocaleContext";
 
 const BRANDS = ["Apple", "Samsung", "Xiaomi", "Google", "OnePlus", "Huawei", "Realme", "Oppo", "Vivo"];
 
@@ -83,7 +84,36 @@ function Products() {
     localStorage.setItem("nova_user_purchases_v1", JSON.stringify(purchases));
   }, [purchases]);
 
+  const { t, lang, setLang } = useLocale();
+
   const formatPrice = (price) => new Intl.NumberFormat("uz-UZ").format(price);
+
+  const normalize = (s) =>
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9+]+/g, "")
+      .replace(/\+/g, "plus");
+
+  const languages = [
+    { value: "uz", label: "UZ" },
+    { value: "ru", label: "RU" },
+    { value: "en", label: "EN" },
+  ];
+
+  const handleImgError = (e, product) => {
+    try {
+      const img = e.currentTarget;
+      const attempts = parseInt(img.dataset.attempts || "0", 10);
+      if (attempts === 0) {
+        const slug = normalize(product.name);
+        img.dataset.attempts = "1";
+        img.src = `/images/${slug}.jpeg`;
+        return;
+      }
+    } catch {}
+    // final fallback
+    e.currentTarget.src = "/images/images.jpeg";
+  };
 
   const toggleLike = (id) => {
     setLiked((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]));
@@ -115,28 +145,42 @@ function Products() {
     return matchesSearch && matchesBrand;
   });
 
+  const orderedProducts = [...filtered].sort((a, b) =>
+    a.brand.localeCompare(b.brand) || a.name.localeCompare(b.name)
+  );
+
   return (
     <div className="shop-page">
       <div className="products-header">
         <div>
-          <h1>Mahsulotlar 📱</h1>
-          <p>Yoqtirgan telefoningizni tanlang va buyurtma bering. Jami: {catalog.length} ta</p>
+          <h1>{t("products_title")}</h1>
+          <p>
+            {t("products_sub")} Jami: {catalog.length} ta
+          </p>
         </div>
       </div>
 
       <div className="products-toolbar">
         <input
           type="text"
-          placeholder="🔍 Telefon yoki brend qidirish..."
+          placeholder={t("search_placeholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
 
         <select value={brandFilter} onChange={(e) => setBrandFilter(e.target.value)}>
-          <option value="all">Barcha brendlar</option>
+          <option value="all">{t("all_brands")}</option>
           {BRANDS.map((brand) => (
             <option key={brand} value={brand}>
               {brand}
+            </option>
+          ))}
+        </select>
+
+        <select className="products-lang-select" value={lang} onChange={(e) => setLang(e.target.value)}>
+          {languages.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
             </option>
           ))}
         </select>
@@ -145,7 +189,7 @@ function Products() {
       {/* Loading va Error olib tashlandi, chunki mahsulotlar birdaniga keladi */}
 
       <div className="products-grid">
-        {filtered.map((product) => {
+        {orderedProducts.map((product) => {
           const oldPrice = product.oldPrice ?? Math.round(product.price * 1.15);
           const discount = product.discount ?? Math.round(((oldPrice - product.price) / oldPrice) * 100);
           const rating = product.rating ?? 4.5;
@@ -153,11 +197,12 @@ function Products() {
           return (
             <div className="product-card" key={product.id}>
               <div className="product-image">
-                {/* RASM TO'G'RIDAN-TO'G'RI PUBLIC PAPKASIDAN OLINADI */}
                 <img
                   src={product.image}
                   alt={product.name}
                   loading="lazy"
+                  onError={(e) => handleImgError(e, product)}
+                  data-attempts={0}
                   style={{ backgroundColor: "#f8fafc", objectFit: "contain" }}
                 />
                 <span className="discount-badge">-{discount}%</span>
@@ -183,13 +228,12 @@ function Products() {
                   <del>{formatPrice(oldPrice)} so'm</del>
                   <h3>{formatPrice(product.price)} so'm</h3>
                 </div>
-
                 <button
                   className="shop-buy-btn"
                   onClick={() => handleBuy(product)}
                   disabled={justBought === product.id}
                 >
-                  {justBought === product.id ? "✅ Savatga qo'shildi!" : "🛒 Sotib olish"}
+                  {justBought === product.id ? t("added") : t("buy")}
                 </button>
               </div>
             </div>
@@ -199,7 +243,7 @@ function Products() {
 
       {filtered.length === 0 && (
         <div className="no-products">
-          <h2>😔 Mahsulot topilmadi</h2>
+          <h2>{t("no_products")}</h2>
           <p>Boshqa nom yoki brend bilan qidirib ko'ring.</p>
         </div>
       )}

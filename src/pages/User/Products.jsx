@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../context/LocaleContext";
 
 const BRANDS = ["Apple", "Samsung", "Xiaomi", "Google", "OnePlus", "Huawei", "Realme", "Oppo", "Vivo"];
 
@@ -72,7 +73,29 @@ function Products() {
   useEffect(() => { localStorage.setItem("nova_user_liked_v1", JSON.stringify(liked)); }, [liked]);
   useEffect(() => { localStorage.setItem("nova_user_purchases_v1", JSON.stringify(purchases)); }, [purchases]);
 
+  const { t } = useLocale();
+
   const formatPrice = (price) => new Intl.NumberFormat("uz-UZ").format(price);
+
+  const normalize = (s) =>
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9+]+/g, "")
+      .replace(/\+/g, "plus");
+
+  const handleImgError = (e, product) => {
+    try {
+      const img = e.currentTarget;
+      const attempts = parseInt(img.dataset.attempts || "0", 10);
+      if (attempts === 0) {
+        const slug = normalize(product.name);
+        img.dataset.attempts = "1";
+        img.src = `/images/${slug}.jpeg`;
+        return;
+      }
+    } catch {}
+    e.currentTarget.src = "/images/images.jpeg";
+  };
 
   const toggleLike = (id) => {
     setLiked((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]));
@@ -134,6 +157,8 @@ function Products() {
                   src={product.image}
                   alt={product.name}
                   loading="lazy"
+                  onError={(e) => handleImgError(e, product)}
+                  data-attempts={0}
                   style={{ backgroundColor: "#f8fafc", objectFit: "contain" }}
                 />
                 <span className="discount-badge">-{discount}%</span>
@@ -151,7 +176,7 @@ function Products() {
                   <h3>{formatPrice(product.price)} so'm</h3>
                 </div>
                 <button className="shop-buy-btn" onClick={() => handleBuy(product)} disabled={justBought === product.id}>
-                  {justBought === product.id ? "✅ Savatga qo'shildi!" : "🛒 Sotib olish"}
+                  {justBought === product.id ? t("added") : t("buy")}
                 </button>
               </div>
             </div>
@@ -161,7 +186,7 @@ function Products() {
 
       {filtered.length === 0 && (
         <div className="no-products">
-          <h2>😔 Mahsulot topilmadi</h2>
+          <h2>{t("no_products")}</h2>
           <p>Boshqa nom yoki brend bilan qidirib ko'ring.</p>
         </div>
       )}
