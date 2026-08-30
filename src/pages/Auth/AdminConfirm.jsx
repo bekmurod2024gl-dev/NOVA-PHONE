@@ -1,24 +1,42 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useLocale } from "../../context/LocaleContext";
+import { getCurrentRole, setSessionUser } from "../../utils/userStorage";
 
 function AdminConfirm() {
-  const currentRole = localStorage.getItem("nova_role");
-  if (currentRole === "admin") {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
+  const currentRole = getCurrentRole();
+  const location = useLocation();
   const navigate = useNavigate();
   const { t } = useLocale();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  if (currentRole === "admin") {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  const handleBack = () => {
+    const from = location.state?.from;
+    if (from === "/user") {
+      navigate("/user", { replace: true });
+      return;
+    }
+
+    navigate("/", { replace: true });
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
     setError("");
 
     if (password.trim() === "jumaboyevAdmin1234") {
-      localStorage.setItem("nova_role", "admin");
-      localStorage.setItem("nova_display_name", "Bobomurod");
+      setSessionUser({
+        id: "admin",
+        username: "bobomurod",
+        email: "admin@nova-phone.uz",
+        password: "jumaboyevAdmin1234",
+        role: "admin",
+      });
       navigate("/admin/dashboard");
       return;
     }
@@ -46,7 +64,16 @@ function AdminConfirm() {
 
           {error && <p className="error-message">{error}</p>}
 
-          <button type="submit">{t("confirm")}</button>
+          <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+            <button type="submit" style={{ flex: 1 }}>{t("confirm")}</button>
+            <button
+              type="button"
+              style={{ flex: 1, background: "rgba(255,255,255,0.08)", color: "#fff" }}
+              onClick={handleBack}
+            >
+              Orqaga
+            </button>
+          </div>
         </form>
       </div>
     </div>

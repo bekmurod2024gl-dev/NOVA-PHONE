@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useLocale } from "../context/LocaleContext";
 import { useEffect, useMemo, useState } from "react";
+import { clearSessionUser, getCurrentRole } from "../utils/userStorage";
 
 const MENUS = {
   admin: {
@@ -85,11 +86,15 @@ function DashboardLayout() {
   const navigate = useNavigate();
   const { lang, setLang, t } = useLocale();
 
-  const role = localStorage.getItem("nova_role") || "user";
+  const role = getCurrentRole() || "user";
   const displayName = localStorage.getItem("nova_display_name") || "Foydalanuvchi";
   const menu = MENUS[role] || MENUS.user;
 
-  const [sidebarOpen, setSidebarOpen] = useState(() => localStorage.getItem("nova_sidebar_open") !== "false");
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem("nova_sidebar_open");
+    if (window.matchMedia("(max-width: 768px)").matches) return false;
+    return saved !== "false";
+  });
   const [themeMode, setThemeMode] = useState(() => localStorage.getItem("nova_theme") || "dark");
   const [menuFilter, setMenuFilter] = useState("");
 
@@ -115,8 +120,7 @@ function DashboardLayout() {
   }, [themeMode]);
 
   function handleLogout() {
-    localStorage.removeItem("nova_role");
-    localStorage.removeItem("nova_display_name");
+    clearSessionUser();
     navigate("/");
   }
 
@@ -134,7 +138,7 @@ function DashboardLayout() {
         : t("good_evening");
 
   return (
-    <div className={`dashboard-layout ${sidebarOpen ? "" : "collapsed"}`}>
+    <div className={`dashboard-layout ${sidebarOpen ? "sidebar-open" : "collapsed"}`}>
       <aside className="sidebar">
         <div className="sidebar-top">
           <div className="sidebar-logo">
@@ -213,9 +217,26 @@ function DashboardLayout() {
         </div>
       </aside>
 
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+          aria-label={t("collapse_sidebar")}
+        />
+      )}
+
       <main className="dashboard-content">
         <div className="dashboard-topbar">
           <div className="topbar-left">
+            <button
+              type="button"
+              className="mobile-menu-button"
+              onClick={() => setSidebarOpen(true)}
+              aria-label={t("expand_sidebar")}
+            >
+              ☰
+            </button>
             <div>
               <p className="topbar-greeting">
                 {greeting}, <strong>{displayName}</strong>

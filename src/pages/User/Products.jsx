@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "../../context/LocaleContext";
+import { getSessionUser, readScopedState, writeScopedState } from "../../utils/userStorage";
 
 const BRANDS = ["Apple", "Samsung", "Xiaomi", "Google", "OnePlus", "Huawei", "Realme", "Oppo", "Vivo"];
 
@@ -52,26 +53,18 @@ function getDeliveryDate() {
 function Products() {
   const [catalog] = useState(HARDCODED_PRODUCTS);
 
-  const [liked, setLiked] = useState(() => {
-    try {
-      const saved = localStorage.getItem("nova_user_liked_v1");
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+  const currentUser = getSessionUser();
 
-  const [purchases, setPurchases] = useState(() => {
-    try {
-      const saved = localStorage.getItem("nova_user_purchases_v1");
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+  const [liked, setLiked] = useState(() => readScopedState("nova_user_liked_v1", []));
+
+  const [purchases, setPurchases] = useState(() => readScopedState("nova_user_purchases_v1", []));
 
   const [search, setSearch] = useState("");
   const [brandFilter, setBrandFilter] = useState("all");
   const [justBought, setJustBought] = useState(null);
 
-  useEffect(() => { localStorage.setItem("nova_user_liked_v1", JSON.stringify(liked)); }, [liked]);
-  useEffect(() => { localStorage.setItem("nova_user_purchases_v1", JSON.stringify(purchases)); }, [purchases]);
+  useEffect(() => { writeScopedState("nova_user_liked_v1", liked); }, [liked, currentUser?.id]);
+  useEffect(() => { writeScopedState("nova_user_purchases_v1", purchases); }, [purchases, currentUser?.id]);
 
   const { t } = useLocale();
 
@@ -93,7 +86,9 @@ function Products() {
         img.src = `/images/${slug}.jpeg`;
         return;
       }
-    } catch {}
+    } catch (error) {
+      console.warn("Image fallback failed", error);
+    }
     e.currentTarget.src = "/images/images.jpeg";
   };
 

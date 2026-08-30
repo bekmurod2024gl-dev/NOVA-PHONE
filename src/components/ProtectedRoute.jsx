@@ -1,29 +1,32 @@
 import { Navigate, useLocation } from "react-router-dom";
 import ManagerConfirm from "../pages/Auth/ManagerConfirm";
+import { getCurrentRole, getSessionUser } from "../utils/userStorage";
 
-// type: 'admin' | 'manager' | 'user' (minimum role)
 export default function ProtectedRoute({ children, role }) {
-  const current = localStorage.getItem("nova_role");
-
+  const currentRole = getCurrentRole();
+  const sessionUser = getSessionUser();
   const location = useLocation();
 
-  // If the route requires admin access, redirect to admin confirm page
+  const isAuthenticated = Boolean(sessionUser && sessionUser.role === currentRole);
+
   if (role === "admin") {
-    if (current === "admin") return children;
-    return <Navigate to="/admin" replace />;
+    if (isAuthenticated && currentRole === "admin") return children;
+    return <Navigate to="/admin" replace state={{ from: location.pathname }} />;
   }
 
-  // If the route requires manager access, redirect to manager confirm page
   if (role === "manager") {
-    if (current === "manager" || current === "admin") return children;
-    // If the user is trying to access the manager root path, show confirmation inline
+    if (isAuthenticated && currentRole === "manager") return children;
+
     if (location.pathname === "/manager") {
       return <ManagerConfirm />;
     }
 
-    return <Navigate to="/manager" replace />;
+    return <Navigate to="/manager" replace state={{ from: location.pathname }} />;
   }
 
-  // For routes without a required role, allow access
+  if (!sessionUser) {
+    return <Navigate to="/" replace state={{ from: location.pathname }} />;
+  }
+
   return children;
 }

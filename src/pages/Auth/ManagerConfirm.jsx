@@ -1,25 +1,42 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useLocale } from "../../context/LocaleContext";
+import { getCurrentRole, setSessionUser } from "../../utils/userStorage";
 
 function ManagerConfirm() {
-  const currentRole = localStorage.getItem("nova_role");
-  if (currentRole === "manager" || currentRole === "admin") {
-    return <Navigate to="/manager" replace />;
-  }
-
+  const currentRole = getCurrentRole();
+  const location = useLocation();
   const navigate = useNavigate();
   const { t } = useLocale();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  if (currentRole === "manager") {
+    return <Navigate to="/manager" replace />;
+  }
+
+  const handleBack = () => {
+    const from = location.state?.from;
+    if (from === "/user") {
+      navigate("/user", { replace: true });
+      return;
+    }
+
+    navigate("/", { replace: true });
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
     setError("");
 
-    if (password.trim() === "manager1234") {
-      localStorage.setItem("nova_role", "manager");
-      localStorage.setItem("nova_display_name", "Menejer");
+    if (password.trim() === "manager123") {
+      setSessionUser({
+        id: "manager",
+        username: "manager",
+        email: "manager@nova-phone.uz",
+        password: "manager123",
+        role: "manager",
+      });
       navigate("/manager");
       return;
     }
@@ -47,7 +64,16 @@ function ManagerConfirm() {
 
           {error && <p className="error-message">{error}</p>}
 
-          <button type="submit">{t("confirm") || "Tasdiqlash"}</button>
+          <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+            <button type="submit" style={{ flex: 1 }}>{t("confirm") || "Tasdiqlash"}</button>
+            <button
+              type="button"
+              style={{ flex: 1, background: "rgba(255,255,255,0.08)", color: "#fff" }}
+              onClick={handleBack}
+            >
+              Orqaga
+            </button>
+          </div>
         </form>
       </div>
     </div>

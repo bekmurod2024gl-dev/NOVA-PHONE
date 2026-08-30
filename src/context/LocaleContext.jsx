@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useEffect, useState } from "react";
 
 const LocaleContext = createContext(null);
 
@@ -136,7 +137,9 @@ export function LocaleProvider({ children }) {
   useEffect(() => {
     try {
       localStorage.setItem("nova_lang", lang);
-    } catch {}
+    } catch (error) {
+      console.warn("Language preference could not be saved", error);
+    }
   }, [lang]);
 
   const t = (key) => {

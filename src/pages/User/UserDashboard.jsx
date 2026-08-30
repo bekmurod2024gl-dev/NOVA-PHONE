@@ -390,12 +390,12 @@ const catalog = [
 ];
 
 function UserDashboard() {
-  const [purchases, setPurchases] = useState(() => {
+  const [purchases] = useState(() => {
     const saved = localStorage.getItem("nova_user_purchases_v1");
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [liked, setLiked] = useState(() => {
+  const [liked] = useState(() => {
     const saved = localStorage.getItem("nova_user_liked_v1");
     return saved ? JSON.parse(saved) : [];
   });
@@ -465,6 +465,10 @@ function UserDashboard() {
           <Link to="/user/products" className="user-banner-cta">
             📱 Mahsulotlarni ko'rish
           </Link>
+          <div className="user-banner-actions">
+            <Link to="/user/liked" className="secondary-button">❤️ Sevimlilar</Link>
+            <Link to="/user/buy" className="secondary-button">🛒 Savatcha</Link>
+          </div>
         </div>
         <div className="user-banner-figure">📱</div>
       </div>

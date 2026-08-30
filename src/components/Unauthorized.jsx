@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-export default function Unauthorized({ role }) {
+export default function Unauthorized() {
   const navigate = useNavigate();
 
   return (

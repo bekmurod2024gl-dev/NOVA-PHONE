@@ -12,7 +12,9 @@ function AppInner() {
         const accent = settings?.appearance?.accent;
         if (accent) document.documentElement.style.setProperty("--accent", accent);
       }
-    } catch {}
+    } catch (error) {
+      console.warn("Appearance settings could not be loaded", error);
+    }
   }, []);
 
   return (

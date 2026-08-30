@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const initialPendingOrders = [
   {
@@ -149,6 +150,10 @@ function ManagerDashboard() {
           <span className="manager-banner-tag">MANAGER PANELI</span>
           <h1>{greeting}, Menejer 👋</h1>
           <p>Bugun {pendingOrders.length} ta buyurtma tasdiqlashingizni kutmoqda.</p>
+          <div className="manager-banner-actions">
+            <Link to="/manager/approvals" className="user-banner-cta">🔔 Tasdiqlashlarni ko'rish</Link>
+            <Link to="/manager/attendance" className="secondary-button">🧑‍💼 Davomat</Link>
+          </div>
         </div>
         <div className="manager-banner-figure">📋</div>
       </div>

@@ -50,7 +50,7 @@ catalog = [
 
 
 def run_seed():
-    """Bazani 36 ta telefon bilan to'ldiradi. Ikkinchi marta ishga tushirilsa, qayta qo'shmaydi."""
+    """Bazani katalog bilan to'ldiradi va placeholder yozuvlarni tiklaydi."""
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
@@ -60,8 +60,25 @@ def run_seed():
                 db.add(Product(**item))
             db.commit()
             return {"success": True, "message": f"{len(catalog)} ta mahsulot bazaga qo'shildi!"}
-        else:
-            return {"success": False, "message": f"Bazada allaqachon {existing_count} ta mahsulot bor, seed o'tkazilmadi."}
+
+        placeholder_products = db.query(Product).filter(
+            (Product.name == "string") | (Product.image == "string")
+        ).order_by(Product.id).all()
+
+        for product, item in zip(placeholder_products, catalog):
+            for key, value in item.items():
+                setattr(product, key, value)
+
+        for item in catalog:
+            existing = db.query(Product).filter(Product.name == item["name"]).first()
+            if not existing:
+                db.add(Product(**item))
+
+        if placeholder_products or existing_count < len(catalog):
+            db.commit()
+            return {"success": True, "message": "Katalog mahsulotlari bazaga tiklandi!"}
+
+        return {"success": False, "message": f"Bazada allaqachon {existing_count} ta mahsulot bor, seed o'tkazilmadi."}
     finally:
         db.close()
 

@@ -1,12 +1,13 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { clearSessionUser, getSessionUser } from "../../utils/userStorage";
 
 function UserLayout() {
   const navigate = useNavigate();
-  const displayName = localStorage.getItem("nova_display_name") || "Foydalanuvu";
+  const currentUser = getSessionUser();
+  const displayName = currentUser?.username || localStorage.getItem("nova_display_name") || "Foydalanuvu";
 
   function handleLogout() {
-    localStorage.removeItem("nova_role");
-    localStorage.removeItem("nova_display_name");
+    clearSessionUser();
     navigate("/");
   }
 

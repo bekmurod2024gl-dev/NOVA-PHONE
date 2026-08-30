@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getSessionUser, readScopedState, writeScopedState } from "../../utils/userStorage";
 
 // Mahsulotlar ro'yxati (Products.jsx dagi bilan aynan bir xil bo'lishi kerak)
 const HARDCODED_PRODUCTS = [
@@ -44,16 +45,12 @@ function Liked() {
   // Mahsulotlar bazasini yuklaymiz
   const [catalog] = useState(HARDCODED_PRODUCTS);
 
-  const [liked, setLiked] = useState(() => {
-    try {
-      const saved = localStorage.getItem("nova_user_liked_v1");
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+  const currentUser = getSessionUser();
+  const [liked, setLiked] = useState(() => readScopedState("nova_user_liked_v1", []));
 
   useEffect(() => {
-    localStorage.setItem("nova_user_liked_v1", JSON.stringify(liked));
-  }, [liked]);
+    writeScopedState("nova_user_liked_v1", liked);
+  }, [liked, currentUser?.id]);
 
   const formatPrice = (price) => new Intl.NumberFormat("uz-UZ").format(price);
   

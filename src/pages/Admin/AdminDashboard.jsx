@@ -173,6 +173,12 @@ function AdminDashboard() {
         >
           + Yangi mahsulot
         </button>
+        <button
+          className="secondary-button"
+          onClick={() => navigate("/admin/orders")}
+        >
+          📦 Buyurtmalarni ko'rish
+        </button>
       </div>
 
       <div className="stats-grid">

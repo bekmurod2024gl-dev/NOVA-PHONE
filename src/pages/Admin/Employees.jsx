@@ -155,7 +155,12 @@ function Employees() {
         employee.id === id
           ? {
               ...employee,
-              status: employee.status === "Ishlamoqda" ? "Bo'shatilgan" : "Ishlamoqda",
+              status:
+                employee.status === "Ishlamoqda"
+                  ? "Ta'tilda"
+                  : employee.status === "Ta'tilda"
+                    ? "Bo'shatilgan"
+                    : "Ishlamoqda",
             }
           : employee
       )
@@ -294,6 +299,9 @@ function Employees() {
             <div className="admin-actions">
               <button className="edit-button" onClick={() => handleEditClick(employee)}>
                 ✏️ Tahrirlash
+              </button>
+              <button className="secondary-button" onClick={() => toggleStatus(employee.id)}>
+                🔁 Holat
               </button>
               <button className="delete-button" onClick={() => handleDelete(employee.id)}>
                 🗑️ O'chirish

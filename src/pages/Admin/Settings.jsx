@@ -76,7 +76,9 @@ function Settings() {
     try {
       const accent = settings?.appearance?.accent;
       if (accent) document.documentElement.style.setProperty("--accent", accent);
-    } catch {}
+    } catch (error) {
+      console.warn("Theme accent could not be applied", error);
+    }
   }, [settings?.appearance?.accent]);
 
   const updateField = (section, field, value) => {

@@ -10,6 +10,12 @@ from app.seed import run_seed
 
 Base.metadata.create_all(bind=engine)
 
+
+def seed_on_startup():
+    result = run_seed()
+    return result
+
+
 app = FastAPI(
     title="NOVA-PHONE API",
     version="1.0.0",
@@ -31,6 +37,11 @@ app.add_middleware(
 
 app.include_router(products_router)
 app.include_router(auth_router)
+
+
+@app.on_event("startup")
+async def startup_event():
+    seed_on_startup()
 
 
 @app.get("/")
