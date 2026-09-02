@@ -1,7 +1,33 @@
 import { useEffect, useState } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+const resolveApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) return envUrl.replace(/\/$/, "");
+
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  if (hostname === "localhost" || hostname === "127.0.0.1") return "/api";
+
+  return "";
+};
+
+const API_URL = resolveApiBaseUrl();
 const EMPTY_FORM = { name: "", brand: "", category: "Smartphone", price: "", stock: "", image: "/images/images.jpeg", description: "" };
+
+async function safeJsonResponse(response) {
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("Backend API javobini o'qib bo'lmadi. Backend URL yoki server konfiguratsiyasi noto'g'ri.");
+  }
+}
 
 function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -16,9 +42,18 @@ function AdminProducts() {
   async function loadProducts() {
     setLoading(true);
     try {
+      if (!API_URL) {
+        throw new Error("Backend URL sozlanmagan. VITE_API_URL ni to'g'ri backend manzilga o'rnating.");
+      }
+
       const response = await fetch(`${API_URL}/products/`);
-      if (!response.ok) throw new Error("Mahsulotlarni yuklab bo'lmadi");
-      setProducts(await response.json());
+      if (!response.ok) {
+        const detail = await safeJsonResponse(response).catch(() => null);
+        throw new Error(detail?.detail || detail?.message || "Mahsulotlarni yuklab bo'lmadi");
+      }
+
+      const payload = await safeJsonResponse(response);
+      setProducts(Array.isArray(payload) ? payload : []);
       setError("");
     } catch (loadError) {
       setError(`${loadError.message}. Backend serverni ishga tushiring.`);
@@ -54,8 +89,16 @@ function AdminProducts() {
     setError("");
     const payload = { ...form, price: Number(form.price), stock: Number(form.stock) };
     try {
+      if (!API_URL) {
+        throw new Error("Backend URL sozlanmagan. VITE_API_URL ni to'g'ri backend manzilga o'rnating.");
+      }
+
       const response = await fetch(`${API_URL}/products${editingId ? `/${editingId}` : "/"}`, { method: editingId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      if (!response.ok) throw new Error((await response.json().catch(() => null))?.detail || "Saqlashda xatolik yuz berdi");
+      if (!response.ok) {
+        const detail = await safeJsonResponse(response).catch(() => null);
+        throw new Error(detail?.detail || detail?.message || "Saqlashda xatolik yuz berdi");
+      }
+
       await loadProducts();
       setMessage(editingId ? "Mahsulot yangilandi" : "Mahsulot qo'shildi");
       resetForm();
@@ -69,8 +112,16 @@ function AdminProducts() {
   async function removeProduct(product) {
     if (!window.confirm(`"${product.name}" mahsulotini o'chirmoqchimisiz?`)) return;
     try {
+      if (!API_URL) {
+        throw new Error("Backend URL sozlanmagan. VITE_API_URL ni to'g'ri backend manzilga o'rnating.");
+      }
+
       const response = await fetch(`${API_URL}/products/${product.id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("Mahsulotni o'chirib bo'lmadi");
+      if (!response.ok) {
+        const detail = await safeJsonResponse(response).catch(() => null);
+        throw new Error(detail?.detail || detail?.message || "Mahsulotni o'chirib bo'lmadi");
+      }
+
       setProducts((current) => current.filter((item) => item.id !== product.id));
       if (editingId === product.id) resetForm();
       setMessage("Mahsulot o'chirildi");
