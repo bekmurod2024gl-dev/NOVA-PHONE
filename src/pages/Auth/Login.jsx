@@ -97,7 +97,10 @@ function Login() {
           <div className="input-group">
             <label>{t("username")}</label>
             <input
+              id="username"
+              name="username"
               type="text"
+              autoComplete={mode === "register" ? "username" : "username"}
               placeholder={mode === "register" ? "Yangi username kiriting" : "Username kiriting"}
               value={username}
               onChange={(event) => setUsername(event.target.value)}
@@ -108,7 +111,10 @@ function Login() {
             <div className="input-group">
               <label>Email</label>
               <input
+                id="register-email"
+                name="email"
                 type="email"
+                autoComplete="email"
                 placeholder="Email kiriting"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -119,7 +125,10 @@ function Login() {
           {!forgotPassword && <div className="input-group">
             <label>{t("password")}</label>
             <input
+              id="password"
+              name="password"
               type="password"
+              autoComplete={mode === "register" ? "new-password" : "current-password"}
               placeholder={t("password") + " kiriting"}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -131,9 +140,9 @@ function Login() {
           {forgotPassword && (
             <div className="input-group">
               <label>Ro'yxatdan o'tgan email</label>
-              <input type="email" placeholder="Email kiriting" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} required />
+              <input id="reset-email" name="resetEmail" type="email" autoComplete="email" placeholder="Email kiriting" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} required />
               <label>Yangi parol</label>
-              <input type="password" placeholder="Yangi parol kiriting" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required />
+              <input id="new-password" name="newPassword" type="password" autoComplete="new-password" placeholder="Yangi parol kiriting" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required />
             </div>
           )}
 

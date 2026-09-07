@@ -251,14 +251,21 @@ function Buy() {
           <h3 style={{ marginTop: 0 }}>💳 Karta orqali to'lov</h3>
           <form onSubmit={handleCheckout} style={{ display: "grid", gap: 12 }}>
             <input
+              id="card-holder"
+              name="cardHolder"
               type="text"
+              autoComplete="cc-name"
               placeholder="Karta egasi"
               value={paymentForm.cardHolder}
               onChange={(event) => setPaymentForm((prev) => ({ ...prev, cardHolder: event.target.value }))}
               style={{ padding: 10, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff" }}
             />
             <input
+              id="card-number"
+              name="cardNumber"
               type="text"
+              inputMode="numeric"
+              autoComplete="cc-number"
               placeholder="1234 5678 9012 3456"
               value={paymentForm.cardNumber}
               onChange={(event) => setPaymentForm((prev) => ({ ...prev, cardNumber: event.target.value }))}
@@ -266,14 +273,20 @@ function Buy() {
             />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <input
+                id="card-expiry"
+                name="expiry"
                 type="text"
+                autoComplete="cc-exp"
                 placeholder="MM/YY"
                 value={paymentForm.expiry}
                 onChange={(event) => setPaymentForm((prev) => ({ ...prev, expiry: event.target.value }))}
                 style={{ padding: 10, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff" }}
               />
               <input
+                id="card-cvv"
+                name="cvv"
                 type="password"
+                autoComplete="cc-csc"
                 placeholder="CVV"
                 value={paymentForm.cvv}
                 onChange={(event) => setPaymentForm((prev) => ({ ...prev, cvv: event.target.value }))}
@@ -283,7 +296,10 @@ function Buy() {
 
             <div style={{ display: "flex", gap: 8 }}>
               <input
+                id="promo-code"
+                name="promoCode"
                 type="text"
+                autoComplete="off"
                 placeholder="Promokod"
                 value={promoInput}
                 onChange={(event) => setPromoInput(event.target.value)}

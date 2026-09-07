@@ -150,7 +150,7 @@ function AdminProducts() {
       </form>
       {message && <p className="admin-success-message">{message}</p>}
       {error && <p className="admin-error-message">{error}</p>}
-      <div className="admin-products-toolbar"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Mahsulot qidirish..." /><button type="button" className="secondary-button" onClick={loadProducts}>Yangilash</button></div>
+      <div className="admin-products-toolbar"><input id="admin-product-search" name="productSearch" type="search" autoComplete="off" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Mahsulot qidirish..." /><button type="button" className="secondary-button" onClick={loadProducts}>Yangilash</button></div>
       <div className="admin-products-table-wrap">
         {loading ? <p className="admin-products-empty">Yuklanmoqda...</p> : visibleProducts.length === 0 ? <p className="admin-products-empty">Mahsulot topilmadi.</p> : <div className="products-grid admin-products-grid">{visibleProducts.map((product) => <article className="product-card" key={product.id}>
           <div className="product-image"><img src={product.image || "/images/images.jpeg"} alt={product.name} onError={(event) => { event.currentTarget.src = "/images/images.jpeg"; }} /></div>
