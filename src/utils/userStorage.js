@@ -1,5 +1,6 @@
 export const ACCOUNTS_KEY = "nova_accounts_v1";
 export const SESSION_KEY = "nova_session_user";
+const SESSION_MAX_AGE = 8 * 60 * 60 * 1000;
 
 function safeParse(value, fallback) {
   if (!value) return fallback;
@@ -28,20 +29,27 @@ export function findAccount({ username, email }) {
 }
 
 export function getSessionUser() {
-  return safeParse(localStorage.getItem(SESSION_KEY), null);
+  const sessionUser = safeParse(localStorage.getItem(SESSION_KEY), null);
+  if (!sessionUser?.id || !sessionUser?.role || !sessionUser?.issuedAt) {
+    return null;
+  }
+
+  if (Date.now() - sessionUser.issuedAt > SESSION_MAX_AGE) {
+    clearSessionUser();
+    return null;
+  }
+
+  return sessionUser;
 }
 
 export function getCurrentRole() {
   const sessionUser = getSessionUser();
-  if (sessionUser?.role) {
-    return sessionUser.role;
-  }
-
-  return localStorage.getItem("nova_role") || null;
+  return sessionUser?.role || null;
 }
 
 export function setSessionUser(user) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  const sessionUser = { ...user, issuedAt: Date.now() };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
   localStorage.setItem("nova_role", user?.role || "user");
   localStorage.setItem("nova_display_name", user?.username || user?.displayName || "Foydalanuvchi");
 }
