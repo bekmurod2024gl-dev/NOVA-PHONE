@@ -224,6 +224,18 @@ button:hover {
   font-size: 23px;
 }
 
+.logo-icon img {
+  width: 29px;
+  height: 29px;
+  object-fit: contain;
+}
+
+.brand img {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+}
+
 .sidebar-logo {
   display: flex;
   align-items: center;

@@ -142,7 +142,7 @@ function DashboardLayout() {
       <aside className="sidebar">
         <div className="sidebar-top">
           <div className="sidebar-logo">
-            <div className="logo-icon">📱</div>
+            <div className="logo-icon"><img src="/favicon.svg" alt="NOVA PHONE" /></div>
             <div>
               <h2>{t("mobile_store")}</h2>
               <span>{t("management_system")}</span>

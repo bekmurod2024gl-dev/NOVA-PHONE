@@ -83,7 +83,7 @@ function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <div className="brand">📱</div>
+        <div className="brand"><img src="/favicon.svg" alt="NOVA PHONE" /></div>
 
         <h1>{forgotPassword ? "Parolni tiklash" : t("mobile_store")}</h1>
         <p className="login-subtitle">{forgotPassword ? "Akkauntingizni tasdiqlash uchun ma'lumotlarni kiriting" : t("login_welcome")}</p>
