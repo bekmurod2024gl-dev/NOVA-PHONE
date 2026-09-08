@@ -18,7 +18,7 @@ function UserLayout() {
         
         {/* LOGO */}
         <div className="user-sidebar-logo">
-          <div className="logo-icon"><img src="/favicon.svg" alt="NOVA PHONE" /></div>
+          <div className="logo-icon"><img src="/images/logo.png" alt="NOVA PHONE" /></div>
           <div>
             <h2>NOVA PHONE</h2>
             <span>Online Do'kon</span>
