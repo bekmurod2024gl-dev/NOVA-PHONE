@@ -30,7 +30,11 @@ export function findAccount({ username, email }) {
 
 export function getSessionUser() {
   const sessionUser = safeParse(localStorage.getItem(SESSION_KEY), null);
-  if (!sessionUser?.id || !sessionUser?.role || !sessionUser?.issuedAt) {
+  const storedRole = localStorage.getItem("nova_role");
+  const validRoles = ["admin", "manager", "user"];
+
+  if (!sessionUser?.id || !validRoles.includes(sessionUser.role) || !sessionUser.issuedAt || storedRole !== sessionUser.role) {
+    if (sessionUser || storedRole) clearSessionUser();
     return null;
   }
 
