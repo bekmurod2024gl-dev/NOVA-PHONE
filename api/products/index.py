@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-backend_path = Path(__file__).resolve().parents[1] / "backend"
+backend_path = Path(__file__).resolve().parents[2] / "backend"
 sys.path.insert(0, str(backend_path))
 
 from app.seed import catalog
@@ -22,10 +22,7 @@ class ProductPayload(BaseModel):
 
 
 app = FastAPI(title="NOVA-PHONE Products API")
-products = [
-    {"id": index, **item}
-    for index, item in enumerate(catalog, start=1)
-]
+products = [{"id": index, **item} for index, item in enumerate(catalog, start=1)]
 
 
 @app.get("/")
