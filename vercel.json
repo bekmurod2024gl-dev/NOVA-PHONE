@@ -5,6 +5,7 @@
     }
   },
   "rewrites": [
+    { "source": "/api/products/:id", "destination": "/api/products?id=:id" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
