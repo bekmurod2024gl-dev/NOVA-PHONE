@@ -3,11 +3,7 @@ import { useEffect, useState } from "react";
 const resolveApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl) return envUrl.replace(/\/$/, "");
-
-  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-  if (hostname === "localhost" || hostname === "127.0.0.1") return "/api";
-
-  return "";
+  return "/api";
 };
 
 const API_URL = resolveApiBaseUrl();
