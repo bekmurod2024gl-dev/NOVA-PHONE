@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getSessionUser, readScopedState, writeScopedState } from "../../utils/userStorage";
+import { getSessionUser, readScopedState, updateSalesReview, writeScopedState } from "../../utils/userStorage";
 
 const PROMO_CODES = {
   NOVA10: { label: "NOVA10", discount: 0.1, note: "10% chegirma" },
@@ -35,6 +35,7 @@ function Buy() {
   const currentUser = getSessionUser();
   const [purchases, setPurchases] = useState(() => readScopedState("nova_user_purchases_v1", []));
   const [ratingDraft, setRatingDraft] = useState({});
+  const [satisfactionDraft, setSatisfactionDraft] = useState({});
   const [promoInput, setPromoInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [paymentMessage, setPaymentMessage] = useState("");
@@ -88,9 +89,10 @@ function Buy() {
   };
 
   const submitRating = (id) => {
-    const rating = ratingDraft[id];
-    if (!rating) return;
-    setPurchases((prev) => prev.map((p) => (p.id === id ? { ...p, myRating: rating } : p)));
+    const rating = ratingDraft[id] ?? 5;
+    const satisfaction = satisfactionDraft[id] ?? "Mamnun";
+    setPurchases((prev) => prev.map((p) => (p.id === id ? { ...p, myRating: rating, satisfaction } : p)));
+    updateSalesReview({ purchaseId: id, rating, satisfaction });
   };
 
   const statusClass = (status) => {
@@ -589,11 +591,21 @@ function Buy() {
                         {"★".repeat(purchase.myRating)}
                         {"☆".repeat(5 - purchase.myRating)}
                       </span>
-                      <p>Rahmat, bahoyingiz uchun!</p>
+                      <p>{purchase.satisfaction === "Norozi" ? "😞 Norozi" : purchase.satisfaction === "Neytral" ? "😐 Neytral" : "😊 Mamnun"}</p>
                     </div>
                   ) : (
                     <div>
                       <p className="rate-label">Mahsulotni baholang:</p>
+                      <select
+                        className="status-select"
+                        value={satisfactionDraft[purchase.id] ?? purchase.satisfaction ?? "Mamnun"}
+                        onChange={(event) => setSatisfactionDraft((prev) => ({ ...prev, [purchase.id]: event.target.value }))}
+                        style={{ marginBottom: 8 }}
+                      >
+                        <option value="Mamnun">😊 Mamnun</option>
+                        <option value="Neytral">😐 Neytral</option>
+                        <option value="Norozi">😞 Norozi</option>
+                      </select>
                       {renderStars(purchase.id, purchase.myRating)}
                       <button className="edit-button" onClick={() => submitRating(purchase.id)}>
                         Baholash

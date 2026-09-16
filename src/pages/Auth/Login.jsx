@@ -9,6 +9,8 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
+  const [surname, setSurname] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState("login");
   const [forgotPassword, setForgotPassword] = useState(false);
@@ -22,6 +24,8 @@ function Login() {
 
     const cleanEmail = email.trim();
     const cleanUsername = username.trim();
+    const cleanSurname = surname.trim();
+    const cleanPhone = phone.trim();
     const cleanPassword = password.trim();
 
     setError("");
@@ -51,11 +55,19 @@ function Login() {
           setError("Username kiriting!");
           return;
         }
+        if (!cleanSurname) {
+          setError("Familiyangizni kiriting!");
+          return;
+        }
         if (!cleanEmail) {
           setError("Email kiriting!");
           return;
         }
-        registerAccount({ username: cleanUsername, email: cleanEmail, password: cleanPassword });
+        if (!cleanPhone) {
+          setError("Telefon raqamingizni kiriting!");
+          return;
+        }
+        registerAccount({ username: cleanUsername, email: cleanEmail, password: cleanPassword, surname: cleanSurname, phone: cleanPhone });
         navigate("/user");
         return;
       }
@@ -108,18 +120,46 @@ function Login() {
           </div>
 
           {mode === "register" && (
-            <div className="input-group">
-              <label>Email</label>
-              <input
-                id="register-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="Email kiriting"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </div>
+            <>
+              <div className="input-group">
+                <label>Familiya</label>
+                <input
+                  id="register-surname"
+                  name="surname"
+                  type="text"
+                  autoComplete="family-name"
+                  placeholder="Familiyangizni kiriting"
+                  value={surname}
+                  onChange={(event) => setSurname(event.target.value)}
+                />
+              </div>
+
+              <div className="input-group">
+                <label>Email</label>
+                <input
+                  id="register-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="Email kiriting"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </div>
+
+              <div className="input-group">
+                <label>Telefon raqam</label>
+                <input
+                  id="register-phone"
+                  name="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  placeholder="+998 90 123 45 67"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                />
+              </div>
+            </>
           )}
 
           {!forgotPassword && <div className="input-group">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getSalesRecords } from "../../utils/userStorage";
 
 const SATISFACTION_LIST = ["Mamnun", "Neytral", "Norozi"];
 
@@ -80,6 +81,12 @@ const defaultSales = [
 function Sales() {
   const [sales, setSales] = useState(() => {
     const saved = localStorage.getItem("nova_sales_v1");
+    const records = getSalesRecords();
+
+    if (records.length > 0) {
+      return records;
+    }
+
     return saved ? JSON.parse(saved) : defaultSales;
   });
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getAccounts, getSessionUser } from "../../utils/userStorage";
 
 const POSITIONS = ["Sotuvchi", "Kassir", "Ombor xodimi", "Menejer", "Yetkazib beruvchi"];
 const STATUS_LIST = ["Ishlamoqda", "Ta'tilda", "Bo'shatilgan"];
@@ -51,6 +52,35 @@ const defaultEmployees = [
   },
 ];
 
+function buildEmployeeFromAccount(account, index) {
+  const fullName = `${account.firstName || account.username || "Foydalanuvchi"} ${account.surname || ""}`.trim();
+  const currentUser = getSessionUser();
+  const isOnline = account.id === currentUser?.id || account.isOnline === true;
+
+  return {
+    id: account.id || `account-${index}`,
+    name: fullName || account.username || "Foydalanuvchi",
+    position: account.position || (account.isEmployee ? "Sotuvchi" : "Mijoz"),
+    phone: account.phone || "+998 90 000 00 00",
+    salary: Number(account.salary || 4500000 + index * 250000),
+    hired: account.createdAt || new Date().toISOString().slice(0, 10),
+    status: account.isEmployee ? (isOnline ? "Ishlamoqda" : "Ta'tilda") : "Bo'shatilgan",
+    accountId: account.id,
+    isOnline,
+  };
+}
+
+function getDerivedEmployees() {
+  const accounts = getAccounts();
+  if (!accounts.length) {
+    return defaultEmployees;
+  }
+
+  return accounts
+    .map((account, index) => buildEmployeeFromAccount(account, index))
+    .filter((employee) => employee.name && employee.phone);
+}
+
 const initialFormState = {
   name: "",
   position: "",
@@ -63,6 +93,12 @@ const initialFormState = {
 function Employees() {
   const [employees, setEmployees] = useState(() => {
     const saved = localStorage.getItem("nova_employees_v1");
+    const derived = getDerivedEmployees();
+
+    if (derived.length > 0 && derived[0]?.accountId) {
+      return derived;
+    }
+
     return saved ? JSON.parse(saved) : defaultEmployees;
   });
 

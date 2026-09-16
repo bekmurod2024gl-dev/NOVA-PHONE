@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getSalesRecords } from "../../utils/userStorage";
 
 const STATUS_LIST = ["Kutilmoqda", "Yetkazilmoqda", "Yetkazildi", "Bekor qilindi"];
 
@@ -11,6 +12,8 @@ const defaultOrders = [
     price: 12500000,
     date: "2026-07-20",
     status: "Yetkazildi",
+    satisfaction: "Mamnun",
+    rating: 5,
   },
   {
     id: 2,
@@ -20,6 +23,8 @@ const defaultOrders = [
     price: 14800000,
     date: "2026-07-22",
     status: "Yetkazilmoqda",
+    satisfaction: "Neytral",
+    rating: 3,
   },
   {
     id: 3,
@@ -29,6 +34,8 @@ const defaultOrders = [
     price: 9200000,
     date: "2026-07-23",
     status: "Kutilmoqda",
+    satisfaction: "Mamnun",
+    rating: 5,
   },
   {
     id: 4,
@@ -38,6 +45,8 @@ const defaultOrders = [
     price: 7800000,
     date: "2026-07-24",
     status: "Bekor qilindi",
+    satisfaction: "Norozi",
+    rating: 1,
   },
   {
     id: 5,
@@ -47,13 +56,28 @@ const defaultOrders = [
     price: 10500000,
     date: "2026-07-25",
     status: "Kutilmoqda",
+    satisfaction: "Mamnun",
+    rating: 4,
   },
 ];
 
 function Orders() {
   const [orders, setOrders] = useState(() => {
     const saved = localStorage.getItem("nova_orders_v1");
-    return saved ? JSON.parse(saved) : defaultOrders;
+    const realOrders = getSalesRecords().map((record) => ({
+      id: record.id,
+      user: record.customer,
+      phone: record.phone,
+      product: record.product,
+      price: Number(record.price || 0),
+      date: record.date,
+      status: record.status || "Yetkazildi",
+      satisfaction: record.satisfaction || "Mamnun",
+      rating: Number(record.rating || 5),
+      comment: record.comment || "",
+    }));
+
+    return realOrders.length > 0 ? realOrders : (saved ? JSON.parse(saved) : defaultOrders);
   });
 
   const [search, setSearch] = useState("");
@@ -112,6 +136,19 @@ function Orders() {
         return "status-cancelled";
       default:
         return "";
+    }
+  };
+
+  const satisfactionEmoji = (satisfaction) => {
+    switch (satisfaction) {
+      case "Mamnun":
+        return "😊";
+      case "Neytral":
+        return "😐";
+      case "Norozi":
+        return "😞";
+      default:
+        return "❓";
     }
   };
 
@@ -206,9 +243,18 @@ function Orders() {
             <div className="order-date-cell">{formatDate(order.date)}</div>
 
             <div className="order-status-cell">
-              <span className={`status-badge ${statusClass(order.status)}`}>
-                {order.status}
-              </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <span className={`status-badge ${statusClass(order.status)}`}>
+                  {order.status}
+                </span>
+                <span className="status-badge satisfaction-happy" style={{ width: "fit-content" }}>
+                  {satisfactionEmoji(order.satisfaction)} {order.satisfaction || "Mamnun"}
+                </span>
+                <span className="review-stars" style={{ fontSize: 14 }}>
+                  {"★".repeat(Number(order.rating || 0))}
+                  {"☆".repeat(5 - Number(order.rating || 0))}
+                </span>
+              </div>
               <select
                 className="status-select"
                 value={order.status}

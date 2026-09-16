@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { HARDCODED_PRODUCTS } from "../User/Products";
 
 const resolveApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
@@ -49,9 +50,11 @@ function AdminProducts() {
       }
 
       const payload = await safeJsonResponse(response);
-      setProducts(Array.isArray(payload) ? payload : []);
+      const nextProducts = Array.isArray(payload) && payload.length > 0 ? payload : HARDCODED_PRODUCTS;
+      setProducts(nextProducts);
       setError("");
     } catch (loadError) {
+      setProducts(HARDCODED_PRODUCTS);
       setError(`${loadError.message}. Backend serverni ishga tushiring.`);
     } finally {
       setLoading(false);

@@ -28,6 +28,7 @@ import AdminConfirm from "../pages/Auth/AdminConfirm";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "../components/ProtectedRoute";
+import NotFound from "../pages/NotFound";
 
 function AppRoutes() {
   return (
@@ -66,6 +67,8 @@ function AppRoutes() {
         <Route path="/admin/promotions" element={<ProtectedRoute role="admin"><Promotions /></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute role="admin"><Settings /></ProtectedRoute>} />
       </Route>
+
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

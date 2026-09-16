@@ -11,6 +11,21 @@ function safeParse(value, fallback) {
   }
 }
 
+export function normalizePhone(value = "") {
+  const digits = String(value).replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("998")) {
+    return "+998 " + digits.slice(3, 5) + " " + digits.slice(5, 8) + " " + digits.slice(8, 10) + " " + digits.slice(10, 12);
+  }
+  return "+998 " + digits.slice(0, 2) + " " + digits.slice(2, 5) + " " + digits.slice(5, 7) + " " + digits.slice(7, 9);
+}
+
+export function getUserDisplayName(user = {}) {
+  const parts = [user.firstName, user.surname, user.username, user.name].filter(Boolean);
+  if (parts.length) return parts.join(" ");
+  return "Foydalanuvchi";
+}
+
 export function getAccounts() {
   return safeParse(localStorage.getItem(ACCOUNTS_KEY), []);
 }
@@ -52,10 +67,15 @@ export function getCurrentRole() {
 }
 
 export function setSessionUser(user) {
-  const sessionUser = { ...user, issuedAt: Date.now() };
+  const sessionUser = {
+    ...user,
+    displayName: getUserDisplayName(user),
+    issuedAt: Date.now(),
+  };
+
   localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
   localStorage.setItem("nova_role", user?.role || "user");
-  localStorage.setItem("nova_display_name", user?.username || user?.displayName || "Foydalanuvchi");
+  localStorage.setItem("nova_display_name", sessionUser.displayName || "Foydalanuvchi");
 }
 
 export function clearSessionUser() {
@@ -80,9 +100,62 @@ export function writeScopedState(prefix, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-export function registerAccount({ username, email, password }) {
+export function getSalesRecords() {
+  const records = safeParse(localStorage.getItem("nova_sales_records_v1"), []);
+  return Array.isArray(records) ? records : [];
+}
+
+export function setSalesRecords(records) {
+  localStorage.setItem("nova_sales_records_v1", JSON.stringify(records));
+}
+
+export function recordUserPurchase({ buyer, product, price, status = "Yetkazildi", comment = "", sourceId }) {
+  const currentBuyer = buyer || getSessionUser();
+  const productName = product?.name || product || "Mahsulot";
+  const totalPrice = Number(price || product?.price || 0);
+  const nextRecord = {
+    id: sourceId || Date.now(),
+    customer: getUserDisplayName(currentBuyer),
+    phone: normalizePhone(currentBuyer?.phone || currentBuyer?.phoneNumber || "+998 90 000 00 00"),
+    product: productName,
+    price: totalPrice,
+    date: new Date().toISOString().slice(0, 10),
+    status,
+    satisfaction: "Mamnun",
+    rating: 5,
+    comment: comment || "Mijoz buyurtma qildi.",
+    customerId: currentBuyer?.id || null,
+  };
+
+  const records = getSalesRecords();
+  const merged = records.some((record) => record.id === nextRecord.id)
+    ? records.map((record) => (record.id === nextRecord.id ? { ...record, ...nextRecord } : record))
+    : [nextRecord, ...records];
+
+  setSalesRecords(merged);
+  return nextRecord;
+}
+
+export function updateSalesReview({ purchaseId, rating, satisfaction }) {
+  const records = getSalesRecords();
+  const updated = records.map((record) => (
+    record.id === purchaseId
+      ? {
+          ...record,
+          rating: Number(rating || 0),
+          satisfaction: satisfaction || record.satisfaction || "Mamnun",
+        }
+      : record
+  ));
+  setSalesRecords(updated);
+  return updated;
+}
+
+export function registerAccount({ username, email, password, surname = "", phone = "" }) {
   const trimmedUsername = username.trim();
   const trimmedEmail = email.trim().toLowerCase();
+  const trimmedSurname = surname.trim();
+  const cleanedPhone = normalizePhone(phone);
 
   const reservedNames = ["admin", "manager", "bobomurod"];
 
@@ -90,8 +163,8 @@ export function registerAccount({ username, email, password }) {
     throw new Error("Bu username rezerv qilingan. Boshqa username tanlang!");
   }
 
-  if (!trimmedUsername || !trimmedEmail || !password) {
-    throw new Error("Barcha maydonlarni to'ldiring!");
+  if (!trimmedUsername || !trimmedEmail || !password || !trimmedSurname || !cleanedPhone) {
+    throw new Error("Username, familiya, telefon va parolni to'liq kiriting!");
   }
 
   const accounts = getAccounts();
@@ -108,9 +181,15 @@ export function registerAccount({ username, email, password }) {
   const newUser = {
     id: Date.now().toString(),
     username: trimmedUsername,
+    firstName: trimmedUsername,
+    surname: trimmedSurname,
+    phone: cleanedPhone,
     email: trimmedEmail,
     password,
     role: "user",
+    createdAt: new Date().toISOString().slice(0, 10),
+    isEmployee: false,
+    isBlocked: false,
   };
 
   saveAccounts([...accounts, newUser]);
@@ -126,6 +205,9 @@ export function loginAccount({ username, email, password }) {
     const adminUser = {
       id: "admin",
       username: "bobomurod",
+      firstName: "Bobomurod",
+      surname: "Egamberdiyev",
+      phone: "+998 90 000 00 00",
       email: "admin@nova-phone.uz",
       password: "jumaboyevAdmin1234",
       role: "admin",
@@ -138,6 +220,9 @@ export function loginAccount({ username, email, password }) {
     const managerUser = {
       id: "manager",
       username: "manager",
+      firstName: "Manager",
+      surname: "Menejer",
+      phone: "+998 90 111 22 33",
       email: "manager@nova-phone.uz",
       password: "manager123",
       role: "manager",
@@ -177,3 +262,4 @@ export function resetAccountPassword({ username, email, newPassword }) {
   ));
   saveAccounts(accounts);
 }
+

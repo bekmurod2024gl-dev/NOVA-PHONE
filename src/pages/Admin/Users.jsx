@@ -1,68 +1,34 @@
 import { useEffect, useState } from "react";
+import { getAccounts, getUserDisplayName } from "../../utils/userStorage";
 
 const ROLES = ["User", "Manager", "Admin"];
 
-const defaultUsers = [
-  {
-    id: 1,
-    name: "Ali Valiyev",
-    email: "ali.valiyev@gmail.com",
-    phone: "+998 90 123 45 67",
-    role: "User",
-    status: "Faol",
-    joined: "2026-05-12",
-  },
-  {
-    id: 2,
-    name: "Jasur Karimov",
-    email: "jasur.karimov@gmail.com",
-    phone: "+998 91 234 56 78",
-    role: "Manager",
-    status: "Faol",
-    joined: "2026-04-03",
-  },
-  {
-    id: 3,
-    name: "Madina Sobirova",
-    email: "madina.sobirova@gmail.com",
-    phone: "+998 93 345 67 89",
-    role: "User",
-    status: "Faol",
-    joined: "2026-06-18",
-  },
-  {
-    id: 4,
-    name: "Sardor Akmalov",
-    email: "sardor.akmalov@gmail.com",
-    phone: "+998 94 456 78 90",
-    role: "User",
-    status: "Bloklangan",
-    joined: "2026-03-22",
-  },
-  {
-    id: 5,
-    name: "Dilnoza Karimova",
-    email: "dilnoza.karimova@gmail.com",
-    phone: "+998 95 567 89 01",
-    role: "User",
-    status: "Faol",
-    joined: "2026-07-01",
-  },
-  {
-    id: 6,
-    name: "Bobomurod Egamberdiyev",
-    email: "bobomurod@novaphone.uz",
-    phone: "+998 90 000 00 00",
-    role: "Admin",
-    status: "Faol",
-    joined: "2026-01-10",
-  },
-];
+function getDerivedUsers() {
+  const accounts = getAccounts();
+  if (!accounts.length) return [];
+
+  return accounts.map((account, index) => ({
+    id: account.id || `account-${index}`,
+    name: getUserDisplayName(account),
+    email: account.email,
+    phone: account.phone || "+998 90 000 00 00",
+    role: account.role === "admin" ? "Admin" : account.role === "manager" ? "Manager" : "User",
+    status: account.isBlocked ? "Bloklangan" : "Faol",
+    joined: account.createdAt || new Date().toISOString().slice(0, 10),
+    account,
+  }));
+}
 
 function Users() {
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem("nova_users_v1");
-    return saved ? JSON.parse(saved) : defaultUsers;
+    const derived = getDerivedUsers();
+
+    if (derived.length > 0) {
+      return derived;
+    }
+
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [search, setSearch] = useState("");

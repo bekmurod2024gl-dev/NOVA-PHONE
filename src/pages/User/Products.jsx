@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "../../context/LocaleContext";
-import { getSessionUser, readScopedState, writeScopedState } from "../../utils/userStorage";
+import { getSessionUser, readScopedState, recordUserPurchase, writeScopedState } from "../../utils/userStorage";
 
 const BRANDS = ["Apple", "Samsung", "Xiaomi", "Google", "OnePlus", "Huawei", "Realme", "Oppo", "Vivo"];
 
-const HARDCODED_PRODUCTS = [
+export const HARDCODED_PRODUCTS = [
   {"name":"iPhone 15 Pro","brand":"Apple","price":12500000.0,"image":"/images/iphone15pro.jpeg","description":"Titan korpusli premium iPhone.","id":1},
   {"name":"iPhone 15","brand":"Apple","price":9800000.0,"image":"/images/15.jpeg","description":"Dynamic Island bilan yangi avlod iPhone.","id":2},
   {"name":"iPhone 14 Pro Max","brand":"Apple","price":11900000.0,"image":"/images/14promax.jpeg","description":"Katta ekran va kuchli kamera.","id":3},
@@ -102,14 +102,23 @@ function Products() {
       productId: product.id,
       productName: product.name,
       brand: product.brand,
-      image: product.image, // Endi rasm to'g'ridan-to'g'ri public papkasidan olinadi
+      image: product.image,
       price: product.price,
       orderDate: new Date().toISOString().slice(0, 10),
       deliveryDate: getDeliveryDate(),
       status: "Yetkazilmoqda",
       myRating: 0,
     };
+
     setPurchases((prev) => [newPurchase, ...prev]);
+    recordUserPurchase({
+      buyer: currentUser,
+      sourceId: newPurchase.id,
+      product,
+      price: product.price,
+      status: "Yetkazildi",
+      comment: `Mijoz ${currentUser?.displayName || currentUser?.username || "user"} mahsulot sotib oldi.`,
+    });
     setJustBought(product.id);
     setTimeout(() => setJustBought(null), 2000);
   };
