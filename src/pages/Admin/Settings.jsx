@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getSessionUser, setSessionUser } from "../../utils/userStorage";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: "👤" },
@@ -10,9 +11,9 @@ const TABS = [
 
 const defaultSettings = {
   profile: {
-    name: "Bobomurod Egamberdiyev",
-    email: "bobomurod@novaphone.uz",
-    phone: "+998 90 000 00 00",
+    name: "Bobomurod jumaboyev",
+    email: "bekmurod2024gl@gmail.com",
+    phone: "+998 33 045 86 85",
     position: "Bosh administrator",
   },
   store: {
@@ -64,7 +65,23 @@ function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem("nova_settings_v1");
-    return saved ? JSON.parse(saved) : defaultSettings;
+    if (!saved) return defaultSettings;
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed.profile?.name === "Bobomurod Egamberdiyev") {
+        parsed.profile.name = "Bobomurod jumaboyev";
+        parsed.profile.email = "bekmurod2024gl@gmail.com";
+        parsed.profile.phone = "+998 33 045 86 85";
+        parsed.profile.position = "Bosh administrator";
+      }
+      return {
+        ...defaultSettings,
+        ...parsed,
+        profile: { ...defaultSettings.profile, ...parsed.profile },
+      };
+    } catch {
+      return defaultSettings;
+    }
   });
   const [savedMessage, setSavedMessage] = useState(false);
 
@@ -90,6 +107,34 @@ function Settings() {
 
   const handleSave = (event) => {
     event.preventDefault();
+    localStorage.setItem("nova_settings_v1", JSON.stringify(settings));
+
+    const sessionUser = getSessionUser();
+    const nameParts = (settings.profile.name || "").trim().split(" ");
+    const updatedUser = {
+      ...(sessionUser || {}),
+      id: sessionUser?.id || "admin",
+      role: sessionUser?.role || "admin",
+      name: settings.profile.name,
+      displayName: settings.profile.name,
+      firstName: nameParts[0] || "Bobomurod",
+      surname: nameParts.slice(1).join(" ") || "",
+      email: settings.profile.email,
+      phone: settings.profile.phone,
+      position: settings.profile.position,
+    };
+    setSessionUser(updatedUser);
+
+    localStorage.setItem("nova_display_name", settings.profile.name);
+    localStorage.setItem("nova_position", settings.profile.position);
+
+    if (settings.appearance?.accent) {
+      document.documentElement.style.setProperty("--accent", settings.appearance.accent);
+    }
+
+    window.dispatchEvent(new Event("nova_profile_updated"));
+    window.dispatchEvent(new Event("storage"));
+
     setSavedMessage(true);
     setTimeout(() => setSavedMessage(false), 2500);
   };

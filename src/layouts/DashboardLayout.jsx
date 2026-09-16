@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useLocale } from "../context/LocaleContext";
-import { useEffect, useMemo, useState } from "react";
-import { clearSessionUser, getCurrentRole } from "../utils/userStorage";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { clearSessionUser, getCurrentRole, getSessionUser, safeParse } from "../utils/userStorage";
 
 const MENUS = {
   admin: {
@@ -87,7 +87,55 @@ function DashboardLayout() {
   const { lang, setLang, t } = useLocale();
 
   const role = getCurrentRole() || "user";
-  const displayName = localStorage.getItem("nova_display_name") || "Foydalanuvchi";
+  const [profileData, setProfileData] = useState(() => {
+    const sessionUser = getSessionUser();
+    const savedSettings = safeParse(localStorage.getItem("nova_settings_v1"), null);
+    const savedName = localStorage.getItem("nova_display_name");
+    const isOldName = savedSettings?.profile?.name === "Bobomurod Egamberdiyev" || savedName === "Bobomurod Egamberdiyev" || savedName === "Bobomurod Egamberdiyev bobomurod";
+
+    const name =
+      (!isOldName && savedSettings?.profile?.name) ||
+      (!isOldName && savedName) ||
+      sessionUser?.displayName ||
+      (role === "admin" ? "Bobomurod jumaboyev" : "Foydalanuvchi");
+
+    const position =
+      savedSettings?.profile?.position ||
+      localStorage.getItem("nova_position") ||
+      (role === "admin" ? "Bosh administrator" : role === "manager" ? "Menejer" : "Foydalanuvchi");
+
+    return { name, position };
+  });
+
+  useEffect(() => {
+    const syncProfile = () => {
+      const sessionUser = getSessionUser();
+      const savedSettings = safeParse(localStorage.getItem("nova_settings_v1"), null);
+      const savedName = localStorage.getItem("nova_display_name");
+      const isOldName = savedSettings?.profile?.name === "Bobomurod Egamberdiyev" || savedName === "Bobomurod Egamberdiyev" || savedName === "Bobomurod Egamberdiyev bobomurod";
+
+      const name =
+        (!isOldName && savedSettings?.profile?.name) ||
+        (!isOldName && savedName) ||
+        sessionUser?.displayName ||
+        (role === "admin" ? "Bobomurod jumaboyev" : "Foydalanuvchi");
+
+      const position =
+        savedSettings?.profile?.position ||
+        localStorage.getItem("nova_position") ||
+        (role === "admin" ? "Bosh administrator" : role === "manager" ? "Menejer" : "Foydalanuvchi");
+
+      setProfileData({ name, position });
+    };
+
+    window.addEventListener("nova_profile_updated", syncProfile);
+    window.addEventListener("storage", syncProfile);
+    return () => {
+      window.removeEventListener("nova_profile_updated", syncProfile);
+      window.removeEventListener("storage", syncProfile);
+    };
+  }, [role]);
+
   const menu = MENUS[role] || MENUS.user;
 
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -196,8 +244,8 @@ function DashboardLayout() {
         <div className="sidebar-profile">
           <div className="profile-avatar">{menu.profileIcon}</div>
           <div className="profile-info">
-            <strong>{displayName}</strong>
-            <span>{menu.profileLabel}</span>
+            <strong>{profileData.name}</strong>
+            <span>{role === "admin" ? (profileData.position || "Bosh administrator") : menu.profileLabel}</span>
           </div>
         </div>
 
@@ -239,7 +287,7 @@ function DashboardLayout() {
             </button>
             <div>
               <p className="topbar-greeting">
-                {greeting}, <strong>{displayName}</strong>
+                {greeting}, <strong>{profileData.name}</strong>
               </p>
               <span className="topbar-subtitle">
                 {t("today_is")} {new Date().toLocaleDateString(lang)}

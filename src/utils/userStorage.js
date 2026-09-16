@@ -2,7 +2,7 @@ export const ACCOUNTS_KEY = "nova_accounts_v1";
 export const SESSION_KEY = "nova_session_user";
 const SESSION_MAX_AGE = 8 * 60 * 60 * 1000;
 
-function safeParse(value, fallback) {
+export function safeParse(value, fallback) {
   if (!value) return fallback;
   try {
     return JSON.parse(value);
@@ -21,9 +21,23 @@ export function normalizePhone(value = "") {
 }
 
 export function getUserDisplayName(user = {}) {
-  const parts = [user.firstName, user.surname, user.username, user.name].filter(Boolean);
-  if (parts.length) return parts.join(" ");
-  return "Foydalanuvchi";
+  if (!user) return "Foydalanuvchi";
+  if (user.displayName) return user.displayName;
+  if (user.name) return user.name;
+  const full = [user.firstName, user.surname].filter(Boolean).join(" ").trim();
+  if (full) return full;
+  return user.username || "Foydalanuvchi";
+}
+
+export function getAdminProfile() {
+  const settings = safeParse(localStorage.getItem("nova_settings_v1"), null);
+  const profile = settings?.profile;
+  const isOldDefault = profile?.name === "Bobomurod Egamberdiyev";
+  const name = profile?.name && !isOldDefault ? profile.name : "Bobomurod jumaboyev";
+  const email = profile?.email && !isOldDefault && !profile.email.includes("novaphone.uz") ? profile.email : "bekmurod2024gl@gmail.com";
+  const phone = profile?.phone && !isOldDefault && profile.phone !== "+998 90 000 00 00" ? profile.phone : "+998 33 045 86 85";
+  const position = profile?.position || "Bosh administrator";
+  return { name, email, phone, position };
 }
 
 export function getAccounts() {
@@ -58,6 +72,15 @@ export function getSessionUser() {
     return null;
   }
 
+  if (sessionUser.role === "admin") {
+    const profile = getAdminProfile();
+    sessionUser.displayName = profile.name;
+    sessionUser.name = profile.name;
+    sessionUser.position = profile.position;
+    sessionUser.email = profile.email;
+    sessionUser.phone = profile.phone;
+  }
+
   return sessionUser;
 }
 
@@ -67,21 +90,28 @@ export function getCurrentRole() {
 }
 
 export function setSessionUser(user) {
+  const displayName = getUserDisplayName(user);
   const sessionUser = {
     ...user,
-    displayName: getUserDisplayName(user),
+    displayName,
     issuedAt: Date.now(),
   };
 
   localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
   localStorage.setItem("nova_role", user?.role || "user");
-  localStorage.setItem("nova_display_name", sessionUser.displayName || "Foydalanuvchi");
+  localStorage.setItem("nova_display_name", displayName || "Foydalanuvchi");
+  if (user?.position) {
+    localStorage.setItem("nova_position", user.position);
+  }
+  window.dispatchEvent(new Event("nova_profile_updated"));
+  window.dispatchEvent(new Event("storage"));
 }
 
 export function clearSessionUser() {
   localStorage.removeItem(SESSION_KEY);
   localStorage.removeItem("nova_role");
   localStorage.removeItem("nova_display_name");
+  localStorage.removeItem("nova_position");
 }
 
 export function getScopedStorageKey(prefix) {
@@ -202,13 +232,18 @@ export function loginAccount({ username, email, password }) {
   const trimmedEmail = (email || "").trim().toLowerCase();
 
   if (trimmedUsername.toLowerCase() === "bobomurod" && password === "jumaboyevAdmin1234") {
+    const profile = getAdminProfile();
+    const nameParts = (profile.name || "Bobomurod jumaboyev").trim().split(" ");
     const adminUser = {
       id: "admin",
       username: "bobomurod",
-      firstName: "Bobomurod",
-      surname: "Egamberdiyev",
-      phone: "+998 90 000 00 00",
-      email: "admin@nova-phone.uz",
+      firstName: nameParts[0] || "Bobomurod",
+      surname: nameParts.slice(1).join(" ") || "jumaboyev",
+      name: profile.name,
+      displayName: profile.name,
+      position: profile.position,
+      phone: profile.phone,
+      email: profile.email,
       password: "jumaboyevAdmin1234",
       role: "admin",
     };

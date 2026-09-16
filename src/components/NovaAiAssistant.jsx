@@ -17,9 +17,30 @@ export default function NovaAiAssistant() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  const currentUser = getSessionUser();
-  const role = getCurrentRole() || "guest";
-  const displayName = currentUser ? getUserDisplayName(currentUser) : "Mehmon";
+  const [profile, setProfile] = useState(() => {
+    const user = getSessionUser();
+    const currentRole = getCurrentRole() || "guest";
+    const name = user ? getUserDisplayName(user) : "Mehmon";
+    return { name, role: currentRole };
+  });
+
+  useEffect(() => {
+    const syncProfile = () => {
+      const user = getSessionUser();
+      const currentRole = getCurrentRole() || "guest";
+      const name = user ? getUserDisplayName(user) : "Mehmon";
+      setProfile({ name, role: currentRole });
+    };
+    window.addEventListener("nova_profile_updated", syncProfile);
+    window.addEventListener("storage", syncProfile);
+    return () => {
+      window.removeEventListener("nova_profile_updated", syncProfile);
+      window.removeEventListener("storage", syncProfile);
+    };
+  }, []);
+
+  const role = profile.role;
+  const displayName = profile.name;
 
   // Boshlang'ich tabrik xabari
   useEffect(() => {
