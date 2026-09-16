@@ -1,5 +1,6 @@
 import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
+import NovaAiAssistant from "./components/NovaAiAssistant";
 import { LocaleProvider } from "./context/LocaleContext";
 import { useEffect } from "react";
 
@@ -20,6 +21,7 @@ function AppInner() {
   return (
     <BrowserRouter>
       <AppRoutes />
+      <NovaAiAssistant />
     </BrowserRouter>
   );
 }
