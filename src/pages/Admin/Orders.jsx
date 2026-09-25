@@ -1,87 +1,49 @@
 import { useEffect, useState } from "react";
-import { getSalesRecords } from "../../utils/userStorage";
+import { getSalesRecords, isFakePerson, safeParse } from "../../utils/userStorage";
 
 const STATUS_LIST = ["Kutilmoqda", "Yetkazilmoqda", "Yetkazildi", "Bekor qilindi"];
 
-const defaultOrders = [
-  {
-    id: 1,
-    user: "Ali Valiyev",
-    phone: "+998 90 123 45 67",
-    product: "iPhone 15 Pro",
-    price: 12500000,
-    date: "2026-07-20",
-    status: "Yetkazildi",
-    satisfaction: "Mamnun",
-    rating: 5,
-  },
-  {
-    id: 2,
-    user: "Jasur Karimov",
-    phone: "+998 91 234 56 78",
-    product: "Samsung S24 Ultra",
-    price: 14800000,
-    date: "2026-07-22",
-    status: "Yetkazilmoqda",
-    satisfaction: "Neytral",
-    rating: 3,
-  },
-  {
-    id: 3,
-    user: "Madina Sobirova",
-    phone: "+998 93 345 67 89",
-    product: "Google Pixel 9",
-    price: 9200000,
-    date: "2026-07-23",
-    status: "Kutilmoqda",
-    satisfaction: "Mamnun",
-    rating: 5,
-  },
-  {
-    id: 4,
-    user: "Sardor Akmalov",
-    phone: "+998 94 456 78 90",
-    product: "Xiaomi 14",
-    price: 7800000,
-    date: "2026-07-24",
-    status: "Bekor qilindi",
-    satisfaction: "Norozi",
-    rating: 1,
-  },
-  {
-    id: 5,
-    user: "Dilnoza Karimova",
-    phone: "+998 95 567 89 01",
-    product: "iPhone 14",
-    price: 10500000,
-    date: "2026-07-25",
-    status: "Kutilmoqda",
-    satisfaction: "Mamnun",
-    rating: 4,
-  },
-];
+function getRealOrders() {
+  const records = getSalesRecords();
+  const saved = safeParse(localStorage.getItem("nova_orders_v1"), []);
+  const combined = [...records.map((r) => ({
+    id: r.id,
+    user: r.customer || r.user,
+    phone: r.phone,
+    product: r.product,
+    price: Number(r.price || 0),
+    date: r.date,
+    status: r.status || "Yetkazildi",
+    satisfaction: r.satisfaction || "Mamnun",
+    rating: Number(r.rating || 5),
+    comment: r.comment || "",
+  })), ...saved].filter((o) => o && !isFakePerson(o.user));
+
+  const unique = [];
+  const seen = new Set();
+  for (const item of combined) {
+    if (!seen.has(item.id)) {
+      seen.add(item.id);
+      unique.push(item);
+    }
+  }
+  return unique;
+}
 
 function Orders() {
-  const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem("nova_orders_v1");
-    const realOrders = getSalesRecords().map((record) => ({
-      id: record.id,
-      user: record.customer,
-      phone: record.phone,
-      product: record.product,
-      price: Number(record.price || 0),
-      date: record.date,
-      status: record.status || "Yetkazildi",
-      satisfaction: record.satisfaction || "Mamnun",
-      rating: Number(record.rating || 5),
-      comment: record.comment || "",
-    }));
-
-    return realOrders.length > 0 ? realOrders : (saved ? JSON.parse(saved) : defaultOrders);
-  });
-
+  const [orders, setOrders] = useState(() => getRealOrders());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  useEffect(() => {
+    const syncOrders = () => setOrders(getRealOrders());
+    window.addEventListener("storage", syncOrders);
+    window.addEventListener("nova_sales_updated", syncOrders);
+    return () => {
+      window.removeEventListener("storage", syncOrders);
+      window.removeEventListener("nova_sales_updated", syncOrders);
+    };
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("nova_orders_v1", JSON.stringify(orders));
@@ -111,44 +73,30 @@ function Orders() {
 
   const filteredOrders = orders.filter((order) => {
     const searchText = search.toLowerCase();
+    const user = (order.user || "").toLowerCase();
+    const product = (order.product || "").toLowerCase();
+    const phone = order.phone || "";
     const matchesSearch =
-      order.user.toLowerCase().includes(searchText) ||
-      order.product.toLowerCase().includes(searchText) ||
-      order.phone.includes(searchText);
+      user.includes(searchText) || product.includes(searchText) || phone.includes(searchText);
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const totalOrders = orders.length;
-  const pendingCount = orders.filter((o) => o.status === "Kutilmoqda").length;
+  const totalSum = orders.reduce((sum, order) => sum + Number(order.price || 0), 0);
   const deliveredCount = orders.filter((o) => o.status === "Yetkazildi").length;
-  const cancelledCount = orders.filter((o) => o.status === "Bekor qilindi").length;
+  const pendingCount = orders.filter((o) => o.status === "Yetkazilmoqda" || o.status === "Kutilmoqda").length;
 
   const statusClass = (status) => {
     switch (status) {
-      case "Kutilmoqda":
-        return "status-pending";
-      case "Yetkazilmoqda":
-        return "status-shipping";
       case "Yetkazildi":
-        return "status-delivered";
+        return "satisfaction-happy";
+      case "Yetkazilmoqda":
+      case "Kutilmoqda":
+        return "satisfaction-neutral";
       case "Bekor qilindi":
-        return "status-cancelled";
+        return "satisfaction-sad";
       default:
         return "";
-    }
-  };
-
-  const satisfactionEmoji = (satisfaction) => {
-    switch (satisfaction) {
-      case "Mamnun":
-        return "😊";
-      case "Neytral":
-        return "😐";
-      case "Norozi":
-        return "😞";
-      default:
-        return "❓";
     }
   };
 
@@ -156,8 +104,8 @@ function Orders() {
     <div className="orders-page">
       <div className="products-header">
         <div>
-          <h1>Buyurtmalar 📦</h1>
-          <p>Barcha mijozlar buyurtmalarini shu yerda boshqarasiz.</p>
+          <h1>Mijozlar Buyurtmalari 🛒</h1>
+          <p>Haqiqiy xaridorlar tomonidan rasmiylashtirilgan buyurtmalar nazorati.</p>
         </div>
       </div>
 
@@ -166,14 +114,14 @@ function Orders() {
           <div className="stat-icon">📦</div>
           <div>
             <p>Jami buyurtmalar</p>
-            <h2>{totalOrders}</h2>
+            <h2>{orders.length}</h2>
           </div>
         </div>
 
         <div className="stat-card orange">
-          <div className="stat-icon">⏳</div>
+          <div className="stat-icon">🚚</div>
           <div>
-            <p>Kutilmoqda</p>
+            <p>Jarayonda</p>
             <h2>{pendingCount}</h2>
           </div>
         </div>
@@ -187,10 +135,11 @@ function Orders() {
         </div>
 
         <div className="stat-card blue">
-          <div className="stat-icon">❌</div>
+          <div className="stat-icon">💰</div>
           <div>
-            <p>Bekor qilingan</p>
-            <h2>{cancelledCount}</h2>
+            <p>Buyurtmalar summasi</p>
+            <h2>{formatPrice(totalSum)}</h2>
+            <span>so'm</span>
           </div>
         </div>
       </div>
@@ -198,7 +147,7 @@ function Orders() {
       <div className="products-toolbar">
         <input
           type="text"
-          placeholder="🔍 Mijoz, mahsulot yoki telefon bo'yicha qidirish..."
+          placeholder="🔍 Xaridor, telefon yoki telefon modeli bo'yicha qidirish..."
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
@@ -207,7 +156,7 @@ function Orders() {
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value)}
         >
-          <option value="all">Barcha statuslar</option>
+          <option value="all">Barcha holatlar</option>
           {STATUS_LIST.map((status) => (
             <option key={status} value={status}>
               {status}
@@ -218,11 +167,11 @@ function Orders() {
 
       <div className="orders-list">
         <div className="order-row order-row-head">
-          <span>Mijoz</span>
+          <span>Xaridor</span>
           <span>Mahsulot</span>
           <span>Narxi</span>
-          <span>Sana</span>
-          <span>Status</span>
+          <span>Buyurtma sanasi</span>
+          <span>Holati</span>
           <span>Amallar</span>
         </div>
 
@@ -243,18 +192,9 @@ function Orders() {
             <div className="order-date-cell">{formatDate(order.date)}</div>
 
             <div className="order-status-cell">
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <span className={`status-badge ${statusClass(order.status)}`}>
-                  {order.status}
-                </span>
-                <span className="status-badge satisfaction-happy" style={{ width: "fit-content" }}>
-                  {satisfactionEmoji(order.satisfaction)} {order.satisfaction || "Mamnun"}
-                </span>
-                <span className="review-stars" style={{ fontSize: 14 }}>
-                  {"★".repeat(Number(order.rating || 0))}
-                  {"☆".repeat(5 - Number(order.rating || 0))}
-                </span>
-              </div>
+              <span className={`status-badge ${statusClass(order.status)}`}>
+                {order.status}
+              </span>
               <select
                 className="status-select"
                 value={order.status}
@@ -277,9 +217,9 @@ function Orders() {
         ))}
 
         {filteredOrders.length === 0 && (
-          <div className="no-products">
-            <h2>😔 Buyurtma topilmadi</h2>
-            <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
+          <div className="no-products" style={{ padding: "40px", textAlign: "center" }}>
+            <h2>📦 Hozircha buyurtmalar mavjud emas</h2>
+            <p>Haqiqiy foydalanuvchilar mahsulot sotib olganda, ularning barcha buyurtmalari shu yerda ko'rinadi.</p>
           </div>
         )}
       </div>

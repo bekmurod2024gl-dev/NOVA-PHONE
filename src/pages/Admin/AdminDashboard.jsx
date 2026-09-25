@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getSalesRecords, isFakePerson } from "../../utils/userStorage";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -9,55 +10,42 @@ function AdminDashboard() {
   const [chartPeriod, setChartPeriod] = useState("7");
 
   const [products] = useState([
-    {
-      id: 1,
-      name: "iPhone 15 Pro",
-      price: "12 500 000",
-    },
-    {
-      id: 2,
-      name: "Samsung S24 Ultra",
-      price: "14 800 000",
-    },
-    {
-      id: 3,
-      name: "Google Pixel 9",
-      price: "9 200 000",
-    },
+    { id: 1, name: "iPhone 15 Pro", price: "12 500 000" },
+    { id: 2, name: "Samsung S24 Ultra", price: "14 800 000" },
+    { id: 3, name: "Google Pixel 9", price: "9 200 000" },
   ]);
 
-  const [orders] = useState([
-    {
-      id: 1,
-      user: "Ali Valiyev",
-      product: "iPhone 15 Pro",
-      price: "12 500 000",
-    },
-    {
-      id: 2,
-      user: "Jasur Karimov",
-      product: "Samsung S24 Ultra",
-      price: "14 800 000",
-    },
-    {
-      id: 3,
-      user: "Madina Sobirova",
-      product: "Google Pixel 9",
-      price: "9 200 000",
-    },
-    {
-      id: 4,
-      user: "Sardor Akmalov",
-      product: "Xiaomi 14",
-      price: "7 800 000",
-    },
-    {
-      id: 5,
-      user: "Dilnoza Karimova",
-      product: "iPhone 14",
-      price: "10 500 000",
-    },
-  ]);
+  const [orders, setOrders] = useState(() => {
+    return getSalesRecords()
+      .filter((s) => !isFakePerson(s.customer))
+      .map((r) => ({
+        id: r.id,
+        user: r.customer,
+        product: r.product,
+        price: new Intl.NumberFormat("uz-UZ").format(r.price),
+      }));
+  });
+
+  useEffect(() => {
+    const sync = () => {
+      setOrders(
+        getSalesRecords()
+          .filter((s) => !isFakePerson(s.customer))
+          .map((r) => ({
+            id: r.id,
+            user: r.customer,
+            product: r.product,
+            price: new Intl.NumberFormat("uz-UZ").format(r.price),
+          }))
+      );
+    };
+    window.addEventListener("storage", sync);
+    window.addEventListener("nova_sales_updated", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("nova_sales_updated", sync);
+    };
+  }, []);
 
   const chartData = {
     7: {
@@ -289,19 +277,22 @@ function AdminDashboard() {
             </button>
           </div>
 
-          {(showAllOrders ? orders : orders.slice(0, 3)).map((order) => (
-            <div className="order-item" key={order.id}>
-              <div className="order-user">👤</div>
-
-              <div>
-                <h4>{order.user}</h4>
-
-                <p>{order.product}</p>
+          {orders.length === 0 ? (
+            <p style={{ padding: "20px", opacity: 0.7, textAlign: "center" }}>
+              Hozircha buyurtmalar mavjud emas
+            </p>
+          ) : (
+            (showAllOrders ? orders : orders.slice(0, 3)).map((order) => (
+              <div className="order-item" key={order.id}>
+                <div className="order-user">👤</div>
+                <div>
+                  <h4>{order.user}</h4>
+                  <p>{order.product}</p>
+                </div>
+                <strong>{order.price} so'm</strong>
               </div>
-
-              <strong>{order.price}</strong>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 

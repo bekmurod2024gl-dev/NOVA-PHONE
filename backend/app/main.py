@@ -29,6 +29,8 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "https://nova-phone-39pg.vercel.app",
         "https://nova-phone-39pg-git-main-bekmurod.vercel.app",
+        "https://telefonxarid.uz",
+        "https://www.telefonxarid.uz",
     ],
     allow_credentials=True,
     allow_methods=["*"],

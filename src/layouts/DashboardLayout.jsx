@@ -26,6 +26,7 @@ const MENUS = {
         links: [
           { to: "/admin/users", label: "Users", icon: "👥" },
           { to: "/admin/employees", label: "Employees", icon: "👨‍💼" },
+          { to: "/employee", label: "Ishchi paneli", icon: "👷‍♂️" },
         ],
       },
       {
@@ -63,6 +64,7 @@ const MENUS = {
         links: [
           { to: "/manager/approvals", label: "Tasdiqlash", icon: "🔔" },
           { to: "/manager/attendance", label: "Davomat", icon: "🧑‍💼" },
+          { to: "/manager/workers", label: "Ishchilar", icon: "💼" },
           { to: "/manager/reviews", label: "Izohlar", icon: "💬" },
           { to: "/manager/damaged", label: "Zararlar", icon: "🔧" },
         ],

@@ -29,6 +29,8 @@ import AdminConfirm from "../pages/Auth/AdminConfirm";
 import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "../components/ProtectedRoute";
 import NotFound from "../pages/NotFound";
+import WorkerPanel from "../pages/Manager/WorkerPanel";
+import EmployeeDashboard from "../pages/Employee/EmployeeDashboard";
 
 function AppRoutes() {
   return (
@@ -53,6 +55,7 @@ function AppRoutes() {
         <Route path="/manager/warehouse" element={<ProtectedRoute role="manager"><Warehouse /></ProtectedRoute>} />
         <Route path="/manager/approvals" element={<ProtectedRoute role="manager"><Approvals /></ProtectedRoute>} />
         <Route path="/manager/attendance" element={<ProtectedRoute role="manager"><Attendance /></ProtectedRoute>} />
+        <Route path="/manager/workers" element={<ProtectedRoute role="manager"><WorkerPanel /></ProtectedRoute>} />
         <Route path="/manager/reviews" element={<ProtectedRoute role="manager"><Reviews /></ProtectedRoute>} />
         <Route path="/manager/damaged" element={<ProtectedRoute role="manager"><DamagedItems /></ProtectedRoute>} />
 
@@ -66,6 +69,9 @@ function AppRoutes() {
         <Route path="/admin/analytics" element={<ProtectedRoute role="admin"><Analytics /></ProtectedRoute>} />
         <Route path="/admin/promotions" element={<ProtectedRoute role="admin"><Promotions /></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute role="admin"><Settings /></ProtectedRoute>} />
+
+        {/* ISHCHI / XODIM PANEL */}
+        <Route path="/employee" element={<EmployeeDashboard />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

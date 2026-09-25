@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getSessionUser, submitJobApplication, getUserDisplayName } from "../../utils/userStorage";
 
 const catalog = [
   {
@@ -400,9 +401,34 @@ function UserDashboard() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  useEffect(() => {
-    localStorage.setItem("nova_user_purchases_v1", JSON.stringify(purchases));
-  }, [purchases]);
+  const [showJobModal, setShowJobModal] = useState(false);
+  const [jobPosition, setJobPosition] = useState("Sotuvchi-maslahatchi");
+  const [jobExperience, setJobExperience] = useState("");
+  const [jobMessage, setJobMessage] = useState("");
+  const [jobSubmitted, setJobSubmitted] = useState(false);
+
+  const currentUser = getSessionUser();
+  const isAlreadyEmployee = currentUser?.isEmployee;
+
+  const handleJobSubmit = (e) => {
+    e.preventDefault();
+    submitJobApplication({
+      applicantId: currentUser?.id,
+      name: getUserDisplayName(currentUser),
+      phone: currentUser?.phone,
+      email: currentUser?.email,
+      position: jobPosition,
+      experience: jobExperience,
+      message: jobMessage,
+    });
+    setJobSubmitted(true);
+    setTimeout(() => {
+      setShowJobModal(false);
+      setJobSubmitted(false);
+      setJobExperience("");
+      setJobMessage("");
+    }, 2500);
+  };
 
   const displayName = localStorage.getItem("nova_display_name") || "Mijoz";
   const formatPrice = (price) => new Intl.NumberFormat("uz-UZ").format(price);
@@ -541,6 +567,53 @@ function UserDashboard() {
         </div>
       </div>
 
+      {/* ONLINE ISHGA TOPSHIRISH BANNER */}
+      <div
+        className="user-section-card"
+        style={{
+          background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 100%)",
+          border: "1px solid rgba(99,102,241,0.3)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "16px",
+          padding: "20px 24px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ fontSize: "36px" }}>💼</div>
+          <div>
+            <h3 style={{ margin: "0 0 4px 0", color: "#fff" }}>
+              {isAlreadyEmployee ? "Siz NOVA-PHONE rasmiy xodimisiz!" : "NOVA-PHONE jamoasiga ishga kiring!"}
+            </h3>
+            <p style={{ margin: 0, opacity: 0.85, fontSize: "13.5px" }}>
+              {isAlreadyEmployee
+                ? "Siz xodim sifatida qabul qilingansiz. Shaxsiy ishchi paneli va maoshingizni ko'rishingiz mumkin."
+                : "Sotuvchi-maslahatchi, kassir, ombor xodimi yoki kuryerlik lavozimiga online ariza topshiring."}
+            </p>
+          </div>
+        </div>
+        {isAlreadyEmployee ? (
+          <Link
+            to="/employee"
+            className="add-product-button"
+            style={{ textDecoration: "none", background: "#10b981", whiteSpace: "nowrap" }}
+          >
+            👷‍♂️ Ishchi panelimga o'tish →
+          </Link>
+        ) : (
+          <button
+            type="button"
+            className="add-product-button"
+            style={{ whiteSpace: "nowrap" }}
+            onClick={() => setShowJobModal(true)}
+          >
+            📝 Online ariza topshirish
+          </button>
+        )}
+      </div>
+
       {/* RECENT PURCHASES */}
       <div className="user-section-card">
         <div className="manager-panel-header">
@@ -601,6 +674,102 @@ function UserDashboard() {
           ))}
         </div>
       </div>
+
+      {/* JOB APPLICATION MODAL */}
+      {showJobModal && (
+        <div className="modal-overlay" onClick={() => setShowJobModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>💼 NOVA-PHONE da Ishga Ariza Topshirish</h2>
+              <button className="modal-close" onClick={() => setShowJobModal(false)}>
+                ✕
+              </button>
+            </div>
+
+            {jobSubmitted ? (
+              <div style={{ padding: "40px", textAlign: "center" }}>
+                <span style={{ fontSize: "48px" }}>🎉</span>
+                <h3 style={{ margin: "16px 0 8px 0" }}>Arizangiz muvaffaqiyatli qabul qilindi!</h3>
+                <p style={{ opacity: 0.85, fontSize: "14px" }}>
+                  Bosh administrator (Bobomurod jumaboyev) arizangizni ko'rib chiqadi va tasdiqlangach,
+                  ishchilar ro'yxatiga qo'shilasiz hamda shaxsiy ishchi kabinetingiz ochiladi.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleJobSubmit} className="modal-form">
+                <div className="form-group">
+                  <label>Nomzod (Sizning ismingiz)</label>
+                  <input
+                    type="text"
+                    value={getUserDisplayName(currentUser)}
+                    disabled
+                    style={{ opacity: 0.8 }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Telefon raqamingiz</label>
+                  <input
+                    type="text"
+                    value={currentUser?.phone || "+998 90 000 00 00"}
+                    disabled
+                    style={{ opacity: 0.8 }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Qaysi lavozimda ishlamoqchisiz?</label>
+                  <select
+                    value={jobPosition}
+                    onChange={(e) => setJobPosition(e.target.value)}
+                    required
+                  >
+                    <option value="Sotuvchi-maslahatchi">Sotuvchi-maslahatchi (Savdo zali)</option>
+                    <option value="Kassir">Kassir (Moliya va to'lovlar)</option>
+                    <option value="Ombor xodimi">Ombor xodimi (Qabul qilish va saralash)</option>
+                    <option value="Yetkazib beruvchi (Kuryer)">Yetkazib beruvchi / Kuryer</option>
+                    <option value="Menejer yordamchisi">Menejer yordamchisi</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Ish tajribangiz (ixtiyoriy)</label>
+                  <input
+                    type="text"
+                    placeholder="Masalan: 1 yil telefon do'konida yoki yangi boshlovchi"
+                    value={jobExperience}
+                    onChange={(e) => setJobExperience(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Qo'shimcha xabar / Nega aynan siz?</label>
+                  <textarea
+                    rows="3"
+                    placeholder="O'zingiz haqingizda qisqacha ma'lumot qoldiring..."
+                    value={jobMessage}
+                    onChange={(e) => setJobMessage(e.target.value)}
+                    required
+                  ></textarea>
+                </div>
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="cancel-button"
+                    onClick={() => setShowJobModal(false)}
+                  >
+                    Bekor qilish
+                  </button>
+                  <button type="submit" className="save-button">
+                    🚀 Arizani yuborish
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

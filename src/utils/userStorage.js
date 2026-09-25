@@ -139,6 +139,123 @@ export function setSalesRecords(records) {
   localStorage.setItem("nova_sales_records_v1", JSON.stringify(records));
 }
 
+export const JOB_APPLICATIONS_KEY = "nova_job_applications_v1";
+
+export const FAKE_NAMES = [
+  "Ali Valiyev",
+  "Jasur Karimov",
+  "Madina Sobirova",
+  "Sardor Akmalov",
+  "Dilnoza Karimova",
+  "Otabek Rustamov",
+  "Sherzod Yusupov",
+  "Nodira Tosheva",
+  "Rustam Qodirov",
+  "Zebo Ergasheva",
+  "Aziz Nurmatov",
+];
+
+export function isFakePerson(name = "") {
+  const lower = String(name).trim().toLowerCase();
+  return FAKE_NAMES.some((fake) => lower === fake.toLowerCase());
+}
+
+export function getJobApplications() {
+  return safeParse(localStorage.getItem(JOB_APPLICATIONS_KEY), []);
+}
+
+export function saveJobApplications(apps) {
+  localStorage.setItem(JOB_APPLICATIONS_KEY, JSON.stringify(apps));
+  window.dispatchEvent(new Event("nova_applications_updated"));
+}
+
+export function submitJobApplication({ applicantId, name, phone, email, position, experience, message }) {
+  const apps = getJobApplications();
+  const currentUser = getSessionUser();
+  const newApp = {
+    id: "app-" + Date.now(),
+    applicantId: applicantId || currentUser?.id || "guest",
+    name: name || getUserDisplayName(currentUser),
+    phone: normalizePhone(phone || currentUser?.phone || "+998 90 000 00 00"),
+    email: email || currentUser?.email || "",
+    position: position || "Sotuvchi",
+    experience: experience || "Yangi boshlovchi",
+    message: message || "NOVA-PHONE jamoasida ishlash istagidaman.",
+    status: "Kutilmoqda",
+    appliedAt: new Date().toISOString().slice(0, 10),
+  };
+  saveJobApplications([newApp, ...apps]);
+  return newApp;
+}
+
+export function approveJobApplication(appId, salary = 5000000) {
+  const apps = getJobApplications();
+  const app = apps.find((a) => a.id === appId);
+  if (!app) return null;
+
+  const updatedApps = apps.map((a) => (a.id === appId ? { ...a, status: "Qabul qilindi" } : a));
+  saveJobApplications(updatedApps);
+
+  const accounts = getAccounts();
+  const targetAccount = accounts.find(
+    (acc) => acc.id === app.applicantId || (app.email && acc.email?.toLowerCase() === app.email?.toLowerCase())
+  );
+
+  if (targetAccount) {
+    const updatedAccounts = accounts.map((acc) => {
+      if (acc.id === targetAccount.id) {
+        return {
+          ...acc,
+          isEmployee: true,
+          position: app.position,
+          salary: Number(salary),
+          hired: new Date().toISOString().slice(0, 10),
+          status: "Ishlamoqda",
+        };
+      }
+      return acc;
+    });
+    saveAccounts(updatedAccounts);
+
+    const currentUser = getSessionUser();
+    if (currentUser && currentUser.id === targetAccount.id) {
+      setSessionUser({
+        ...currentUser,
+        isEmployee: true,
+        position: app.position,
+      });
+    }
+  }
+  window.dispatchEvent(new Event("nova_employees_updated"));
+  return app;
+}
+
+export function rejectJobApplication(appId) {
+  const apps = getJobApplications();
+  const updatedApps = apps.map((a) => (a.id === appId ? { ...a, status: "Rad etildi" } : a));
+  saveJobApplications(updatedApps);
+  return appId;
+}
+
+export function hireUserAsEmployee({ accountId, position = "Sotuvchi", salary = 5000000 }) {
+  const accounts = getAccounts();
+  const updated = accounts.map((acc) => {
+    if (acc.id === accountId) {
+      return {
+        ...acc,
+        isEmployee: true,
+        position,
+        salary: Number(salary),
+        hired: new Date().toISOString().slice(0, 10),
+        status: "Ishlamoqda",
+      };
+    }
+    return acc;
+  });
+  saveAccounts(updated);
+  window.dispatchEvent(new Event("nova_employees_updated"));
+}
+
 export function recordUserPurchase({ buyer, product, price, status = "Yetkazildi", comment = "", sourceId }) {
   const currentBuyer = buyer || getSessionUser();
   const productName = product?.name || product || "Mahsulot";

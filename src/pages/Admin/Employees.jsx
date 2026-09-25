@@ -1,56 +1,17 @@
 import { useEffect, useState } from "react";
-import { getAccounts, getSessionUser } from "../../utils/userStorage";
+import {
+  getAccounts,
+  getSessionUser,
+  getJobApplications,
+  approveJobApplication,
+  rejectJobApplication,
+  hireUserAsEmployee,
+  isFakePerson,
+  safeParse,
+} from "../../utils/userStorage";
 
 const POSITIONS = ["Sotuvchi", "Kassir", "Ombor xodimi", "Menejer", "Yetkazib beruvchi"];
 const STATUS_LIST = ["Ishlamoqda", "Ta'tilda", "Bo'shatilgan"];
-
-const defaultEmployees = [
-  {
-    id: 1,
-    name: "Sherzod Yusupov",
-    position: "Menejer",
-    phone: "+998 90 111 22 33",
-    salary: 8000000,
-    hired: "2025-03-10",
-    status: "Ishlamoqda",
-  },
-  {
-    id: 2,
-    name: "Nodira Tosheva",
-    position: "Sotuvchi",
-    phone: "+998 91 222 33 44",
-    salary: 4500000,
-    hired: "2025-08-15",
-    status: "Ishlamoqda",
-  },
-  {
-    id: 3,
-    name: "Rustam Qodirov",
-    position: "Kassir",
-    phone: "+998 93 333 44 55",
-    salary: 4000000,
-    hired: "2026-01-20",
-    status: "Ta'tilda",
-  },
-  {
-    id: 4,
-    name: "Zebo Ergasheva",
-    position: "Ombor xodimi",
-    phone: "+998 94 444 55 66",
-    salary: 4200000,
-    hired: "2025-11-05",
-    status: "Ishlamoqda",
-  },
-  {
-    id: 5,
-    name: "Aziz Nurmatov",
-    position: "Yetkazib beruvchi",
-    phone: "+998 95 555 66 77",
-    salary: 3800000,
-    hired: "2025-06-01",
-    status: "Bo'shatilgan",
-  },
-];
 
 function buildEmployeeFromAccount(account, index) {
   const fullName = `${account.firstName || account.username || "Foydalanuvchi"} ${account.surname || ""}`.trim();
@@ -60,11 +21,11 @@ function buildEmployeeFromAccount(account, index) {
   return {
     id: account.id || `account-${index}`,
     name: fullName || account.username || "Foydalanuvchi",
-    position: account.position || (account.isEmployee ? "Sotuvchi" : "Mijoz"),
+    position: account.position || "Sotuvchi",
     phone: account.phone || "+998 90 000 00 00",
     salary: Number(account.salary || 4500000 + index * 250000),
-    hired: account.createdAt || new Date().toISOString().slice(0, 10),
-    status: account.isEmployee ? (isOnline ? "Ishlamoqda" : "Ta'tilda") : "Bo'shatilgan",
+    hired: account.hired || account.createdAt || new Date().toISOString().slice(0, 10),
+    status: account.status || "Ishlamoqda",
     accountId: account.id,
     isOnline,
   };
@@ -72,35 +33,35 @@ function buildEmployeeFromAccount(account, index) {
 
 function getDerivedEmployees() {
   const accounts = getAccounts();
-  if (!accounts.length) {
-    return defaultEmployees;
-  }
+  const fromAccounts = accounts
+    .filter((acc) => acc.isEmployee && !isFakePerson(acc.firstName || acc.username))
+    .map((account, index) => buildEmployeeFromAccount(account, index));
 
-  return accounts
-    .map((account, index) => buildEmployeeFromAccount(account, index))
-    .filter((employee) => employee.name && employee.phone);
+  const saved = safeParse(localStorage.getItem("nova_employees_v1"), []);
+  const validSaved = saved.filter(
+    (emp) =>
+      emp &&
+      !isFakePerson(emp.name) &&
+      !fromAccounts.some((fa) => fa.name === emp.name || (fa.accountId && fa.accountId === emp.accountId))
+  );
+
+  return [...fromAccounts, ...validSaved];
 }
 
 const initialFormState = {
   name: "",
-  position: "",
+  position: "Sotuvchi",
   phone: "",
-  salary: "",
-  hired: "",
+  salary: "5000000",
+  hired: new Date().toISOString().slice(0, 10),
   status: "Ishlamoqda",
+  accountId: "",
 };
 
 function Employees() {
-  const [employees, setEmployees] = useState(() => {
-    const saved = localStorage.getItem("nova_employees_v1");
-    const derived = getDerivedEmployees();
-
-    if (derived.length > 0 && derived[0]?.accountId) {
-      return derived;
-    }
-
-    return saved ? JSON.parse(saved) : defaultEmployees;
-  });
+  const [activeTab, setActiveTab] = useState("employees"); // "employees" | "applications"
+  const [employees, setEmployees] = useState(() => getDerivedEmployees());
+  const [applications, setApplications] = useState(() => getJobApplications());
 
   const [search, setSearch] = useState("");
   const [positionFilter, setPositionFilter] = useState("all");
@@ -108,9 +69,29 @@ function Employees() {
   const [editingId, setEditingId] = useState(null);
   const [formFields, setFormFields] = useState(initialFormState);
 
+  // Sync state with storage events
+  useEffect(() => {
+    const syncData = () => {
+      setEmployees(getDerivedEmployees());
+      setApplications(getJobApplications());
+    };
+    window.addEventListener("nova_employees_updated", syncData);
+    window.addEventListener("nova_applications_updated", syncData);
+    window.addEventListener("storage", syncData);
+    return () => {
+      window.removeEventListener("nova_employees_updated", syncData);
+      window.removeEventListener("nova_applications_updated", syncData);
+      window.removeEventListener("storage", syncData);
+    };
+  }, []);
+
   useEffect(() => {
     localStorage.setItem("nova_employees_v1", JSON.stringify(employees));
   }, [employees]);
+
+  const registeredAccounts = getAccounts().filter(
+    (acc) => !acc.isEmployee && acc.role !== "admin" && !isFakePerson(acc.username)
+  );
 
   const formatSalary = (salary) => new Intl.NumberFormat("uz-UZ").format(salary);
 
@@ -126,6 +107,23 @@ function Employees() {
     setFormFields((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleSelectRegisteredUser = (accountId) => {
+    if (!accountId) {
+      setFormFields((prev) => ({ ...prev, accountId: "" }));
+      return;
+    }
+    const acc = registeredAccounts.find((a) => a.id === accountId);
+    if (acc) {
+      const fullName = `${acc.firstName || acc.username} ${acc.surname || ""}`.trim();
+      setFormFields((prev) => ({
+        ...prev,
+        accountId: acc.id,
+        name: fullName || acc.username,
+        phone: acc.phone || "+998 90 000 00 00",
+      }));
+    }
+  };
+
   const handleEditClick = (employee) => {
     setEditingId(employee.id);
     setFormFields({
@@ -135,6 +133,7 @@ function Employees() {
       salary: employee.salary,
       hired: employee.hired,
       status: employee.status,
+      accountId: employee.accountId || "",
     });
     setShowModal(true);
   };
@@ -165,6 +164,14 @@ function Employees() {
         )
       );
     } else {
+      if (formFields.accountId) {
+        hireUserAsEmployee({
+          accountId: formFields.accountId,
+          position: formFields.position,
+          salary: Number(formFields.salary),
+        });
+      }
+
       const newEmployee = {
         id: Date.now(),
         name: formFields.name,
@@ -173,6 +180,7 @@ function Employees() {
         salary: Number(formFields.salary),
         hired: formFields.hired,
         status: formFields.status,
+        accountId: formFields.accountId || null,
       };
       setEmployees((prev) => [...prev, newEmployee]);
     }
@@ -187,30 +195,43 @@ function Employees() {
 
   const toggleStatus = (id) => {
     setEmployees((prev) =>
-      prev.map((employee) =>
-        employee.id === id
-          ? {
-              ...employee,
-              status:
-                employee.status === "Ishlamoqda"
-                  ? "Ta'tilda"
-                  : employee.status === "Ta'tilda"
-                    ? "Bo'shatilgan"
-                    : "Ishlamoqda",
-            }
-          : employee
-      )
+      prev.map((employee) => {
+        if (employee.id !== id) return employee;
+        const nextStatus =
+          employee.status === "Ishlamoqda"
+            ? "Ta'tilda"
+            : employee.status === "Ta'tilda"
+            ? "Bo'shatilgan"
+            : "Ishlamoqda";
+        return { ...employee, status: nextStatus };
+      })
     );
+  };
+
+  const handleApproveApp = (app) => {
+    const salaryStr = window.prompt(`${app.name} uchun oylik maoshni kiriting (so'mda):`, "5000000");
+    if (salaryStr === null) return;
+    const salary = Number(salaryStr) || 5000000;
+    approveJobApplication(app.id, salary);
+    setEmployees(getDerivedEmployees());
+    setApplications(getJobApplications());
+  };
+
+  const handleRejectApp = (appId) => {
+    if (!window.confirm("Ushbu arizani rad etmoqchimisiz?")) return;
+    rejectJobApplication(appId);
+    setApplications(getJobApplications());
   };
 
   const filteredEmployees = employees.filter((employee) => {
     const searchText = search.toLowerCase();
     const matchesSearch =
-      employee.name.toLowerCase().includes(searchText) ||
-      employee.phone.includes(searchText);
+      employee.name.toLowerCase().includes(searchText) || employee.phone.includes(searchText);
     const matchesPosition = positionFilter === "all" || employee.position === positionFilter;
     return matchesSearch && matchesPosition;
   });
+
+  const pendingApps = applications.filter((a) => a.status === "Kutilmoqda");
 
   const totalEmployees = employees.length;
   const activeEmployees = employees.filter((e) => e.status === "Ishlamoqda").length;
@@ -222,10 +243,13 @@ function Employees() {
   const statusClass = (status) => {
     switch (status) {
       case "Ishlamoqda":
+      case "Qabul qilindi":
         return "satisfaction-happy";
       case "Ta'tilda":
+      case "Kutilmoqda":
         return "satisfaction-neutral";
       case "Bo'shatilgan":
+      case "Rad etildi":
         return "satisfaction-sad";
       default:
         return "";
@@ -236,196 +260,346 @@ function Employees() {
     <div className="employees-page">
       <div className="products-header">
         <div>
-          <h1>Xodimlar 🧑‍💼</h1>
-          <p>Do'kon xodimlarini shu yerdan boshqarasiz.</p>
+          <h1>Xodimlar va Ishga Qabul Qilish 🧑‍💼</h1>
+          <p>Haqiqiy xodimlar va sayt orqali kelib tushgan online arizalarni boshqaring.</p>
         </div>
-        <button className="add-product-button" onClick={() => setShowModal(true)}>
-          + Yangi xodim
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button className="add-product-button" onClick={() => setShowModal(true)}>
+            + Yangi xodim qo'shish
+          </button>
+        </div>
+      </div>
+
+      {/* TABS */}
+      <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
+        <button
+          type="button"
+          className={`action-button ${activeTab === "employees" ? "accent" : ""}`}
+          style={{
+            padding: "10px 18px",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontWeight: "600",
+            background: activeTab === "employees" ? "#6366f1" : "rgba(255,255,255,0.08)",
+            color: "#fff",
+            border: "1px solid rgba(255,255,255,0.12)",
+          }}
+          onClick={() => setActiveTab("employees")}
+        >
+          👥 Faol Xodimlar ({totalEmployees})
+        </button>
+        <button
+          type="button"
+          className={`action-button ${activeTab === "applications" ? "accent" : ""}`}
+          style={{
+            padding: "10px 18px",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontWeight: "600",
+            background: activeTab === "applications" ? "#6366f1" : "rgba(255,255,255,0.08)",
+            color: "#fff",
+            border: "1px solid rgba(255,255,255,0.12)",
+            position: "relative",
+          }}
+          onClick={() => setActiveTab("applications")}
+        >
+          📩 Online Arizalar {pendingApps.length > 0 && `(${pendingApps.length})`}
         </button>
       </div>
 
-      <div className="stats-grid orders-stats">
-        <div className="stat-card purple">
-          <div className="stat-icon">🧑‍💼</div>
-          <div>
-            <p>Jami xodimlar</p>
-            <h2>{totalEmployees}</h2>
-          </div>
-        </div>
-
-        <div className="stat-card green">
-          <div className="stat-icon">✅</div>
-          <div>
-            <p>Ishlamoqda</p>
-            <h2>{activeEmployees}</h2>
-          </div>
-        </div>
-
-        <div className="stat-card orange">
-          <div className="stat-icon">🌴</div>
-          <div>
-            <p>Ta'tilda</p>
-            <h2>{onLeave}</h2>
-          </div>
-        </div>
-
-        <div className="stat-card blue">
-          <div className="stat-icon">💵</div>
-          <div>
-            <p>Oylik fond</p>
-            <h2>{formatSalary(totalSalary)}</h2>
-            <span>so'm</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="products-toolbar">
-        <input
-          type="text"
-          placeholder="🔍 Ism yoki telefon bo'yicha qidirish..."
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-
-        <select
-          value={positionFilter}
-          onChange={(event) => setPositionFilter(event.target.value)}
-        >
-          <option value="all">Barcha lavozimlar</option>
-          {POSITIONS.map((position) => (
-            <option key={position} value={position}>
-              {position}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="orders-list">
-        <div className="order-row employee-row order-row-head">
-          <span>Xodim</span>
-          <span>Lavozim</span>
-          <span>Oyligi</span>
-          <span>Ishga kirgan</span>
-          <span>Holati</span>
-          <span>Amallar</span>
-        </div>
-
-        {filteredEmployees.map((employee) => (
-          <div className="order-row employee-row" key={employee.id}>
-            <div className="order-customer">
-              <div className="order-avatar">🧑‍💼</div>
+      {activeTab === "employees" ? (
+        <>
+          <div className="stats-grid orders-stats">
+            <div className="stat-card purple">
+              <div className="stat-icon">🧑‍💼</div>
               <div>
-                <h4>{employee.name}</h4>
-                <p>{employee.phone}</p>
+                <p>Jami xodimlar</p>
+                <h2>{totalEmployees}</h2>
               </div>
             </div>
 
-            <div className="order-product-cell">{employee.position}</div>
-
-            <div className="order-price-cell">{formatSalary(employee.salary)} so'm</div>
-
-            <div className="order-date-cell">{formatDate(employee.hired)}</div>
-
-            <div className="order-status-cell">
-              <span className={`status-badge ${statusClass(employee.status)}`}>
-                {employee.status}
-              </span>
+            <div className="stat-card green">
+              <div className="stat-icon">✅</div>
+              <div>
+                <p>Ishlamoqda</p>
+                <h2>{activeEmployees}</h2>
+              </div>
             </div>
 
-            <div className="admin-actions">
-              <button className="edit-button" onClick={() => handleEditClick(employee)}>
-                ✏️ Tahrirlash
-              </button>
-              <button className="secondary-button" onClick={() => toggleStatus(employee.id)}>
-                🔁 Holat
-              </button>
-              <button className="delete-button" onClick={() => handleDelete(employee.id)}>
-                🗑️ O'chirish
-              </button>
+            <div className="stat-card orange">
+              <div className="stat-icon">🌴</div>
+              <div>
+                <p>Ta'tilda</p>
+                <h2>{onLeave}</h2>
+              </div>
+            </div>
+
+            <div className="stat-card blue">
+              <div className="stat-icon">💵</div>
+              <div>
+                <p>Oylik fond</p>
+                <h2>{formatSalary(totalSalary)}</h2>
+                <span>so'm</span>
+              </div>
             </div>
           </div>
-        ))}
 
-        {filteredEmployees.length === 0 && (
-          <div className="no-products">
-            <h2>😔 Xodim topilmadi</h2>
-            <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
+          <div className="products-toolbar">
+            <input
+              type="text"
+              placeholder="🔍 Ism yoki telefon bo'yicha qidirish..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+
+            <select
+              value={positionFilter}
+              onChange={(event) => setPositionFilter(event.target.value)}
+            >
+              <option value="all">Barcha lavozimlar</option>
+              {POSITIONS.map((position) => (
+                <option key={position} value={position}>
+                  {position}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
-      </div>
 
+          <div className="orders-list">
+            <div className="order-row employee-row order-row-head">
+              <span>Xodim</span>
+              <span>Lavozim</span>
+              <span>Oyligi</span>
+              <span>Ishga kirgan</span>
+              <span>Holati</span>
+              <span>Amallar</span>
+            </div>
+
+            {filteredEmployees.map((employee) => (
+              <div className="order-row employee-row" key={employee.id}>
+                <div className="order-customer">
+                  <div className="order-avatar">🧑‍💼</div>
+                  <div>
+                    <h4>{employee.name}</h4>
+                    <p>{employee.phone}</p>
+                  </div>
+                </div>
+
+                <div className="order-product-cell">{employee.position}</div>
+
+                <div className="order-price-cell">{formatSalary(employee.salary)} so'm</div>
+
+                <div className="order-date-cell">{formatDate(employee.hired)}</div>
+
+                <div className="order-status-cell">
+                  <span className={`status-badge ${statusClass(employee.status)}`}>
+                    {employee.status}
+                  </span>
+                </div>
+
+                <div className="admin-actions">
+                  <button className="edit-button" onClick={() => handleEditClick(employee)}>
+                    ✏️ Tahrirlash
+                  </button>
+                  <button className="secondary-button" onClick={() => toggleStatus(employee.id)}>
+                    🔁 Holat
+                  </button>
+                  <button className="delete-button" onClick={() => handleDelete(employee.id)}>
+                    🗑️ O'chirish
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {filteredEmployees.length === 0 && (
+              <div className="no-products" style={{ padding: "40px", textAlign: "center" }}>
+                <h2>🧑‍💼 Hozircha xodimlar mavjud emas</h2>
+                <p>
+                  Saytdan ro'yxatdan o'tgan foydalanuvchilar online ariza topshirganda yoki siz tomoningizdan
+                  xodim sifatida tayinlanganda shu yerda ko'rinadi.
+                </p>
+                <button
+                  type="button"
+                  className="add-product-button"
+                  style={{ marginTop: "15px" }}
+                  onClick={() => setShowModal(true)}
+                >
+                  + Birinchi xodimni tayinlash
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        /* ONLINE ARIZALAR TAB */
+        <div className="orders-list">
+          <div className="order-row order-row-head" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 2fr 1fr 1.5fr" }}>
+            <span>Nomzod</span>
+            <span>Lavozim</span>
+            <span>Sana</span>
+            <span>Tajriba / Xabar</span>
+            <span>Holat</span>
+            <span>Amallar</span>
+          </div>
+
+          {applications.map((app) => (
+            <div
+              className="order-row"
+              key={app.id}
+              style={{ gridTemplateColumns: "1.5fr 1fr 1fr 2fr 1fr 1.5fr" }}
+            >
+              <div className="order-customer">
+                <div className="order-avatar">📝</div>
+                <div>
+                  <h4>{app.name}</h4>
+                  <p>{app.phone}</p>
+                </div>
+              </div>
+
+              <div><strong>{app.position}</strong></div>
+              <div>{app.appliedAt}</div>
+              <div style={{ fontSize: "13px", opacity: 0.9 }}>{app.message || app.experience}</div>
+
+              <div>
+                <span className={`status-badge ${statusClass(app.status)}`}>{app.status}</span>
+              </div>
+
+              <div className="admin-actions">
+                {app.status === "Kutilmoqda" ? (
+                  <>
+                    <button
+                      className="edit-button"
+                      style={{ background: "#10b981", borderColor: "#10b981" }}
+                      onClick={() => handleApproveApp(app)}
+                    >
+                      ✅ Ishga olish
+                    </button>
+                    <button className="delete-button" onClick={() => handleRejectApp(app.id)}>
+                      ❌ Rad etish
+                    </button>
+                  </>
+                ) : (
+                  <span style={{ fontSize: "12px", opacity: 0.6 }}>Ko'rib chiqilgan</span>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {applications.length === 0 && (
+            <div className="no-products" style={{ padding: "40px", textAlign: "center" }}>
+              <h2>📩 Hozircha online arizalar yo'q</h2>
+              <p>Mijozlar yoki foydalanuvchilar sayt orqali ishga ariza topshirganda barcha arizalar shu yerga tushadi.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODAL */}
       {showModal && (
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingId ? "Xodimni tahrirlash" : "Yangi xodim qo'shish"}</h2>
-              <button onClick={handleCloseModal}>✕</button>
+              <button className="modal-close" onClick={handleCloseModal}>
+                ✕
+              </button>
             </div>
 
-            <form onSubmit={handleFormSubmit}>
-              <input
-                name="name"
-                type="text"
-                placeholder="Xodim ismi"
-                value={formFields.name}
-                onChange={handleInputChange}
-                required
-              />
+            <form onSubmit={handleFormSubmit} className="modal-form">
+              {!editingId && registeredAccounts.length > 0 && (
+                <div className="form-group" style={{ background: "rgba(99,102,241,0.1)", padding: "12px", borderRadius: "8px" }}>
+                  <label>💡 Ro'yxatdan o'tgan foydalanuvchini tanlash (ixtiyoriy):</label>
+                  <select
+                    value={formFields.accountId}
+                    onChange={(e) => handleSelectRegisteredUser(e.target.value)}
+                  >
+                    <option value="">Yangi nom kiritish...</option>
+                    {registeredAccounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.firstName || acc.username} ({acc.phone || acc.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-              <select
-                name="position"
-                value={formFields.position}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="">Lavozimni tanlang</option>
-                {POSITIONS.map((position) => (
-                  <option key={position} value={position}>
-                    {position}
-                  </option>
-                ))}
-              </select>
+              <div className="form-group">
+                <label>To'liq ism</label>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Ism familiyani kiriting"
+                  value={formFields.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-              <input
-                name="phone"
-                type="text"
-                placeholder="Telefon raqami"
-                value={formFields.phone}
-                onChange={handleInputChange}
-                required
-              />
+              <div className="form-group">
+                <label>Lavozim</label>
+                <select name="position" value={formFields.position} onChange={handleInputChange}>
+                  {POSITIONS.map((position) => (
+                    <option key={position} value={position}>
+                      {position}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <input
-                name="salary"
-                type="number"
-                placeholder="Oylik maoshi"
-                value={formFields.salary}
-                onChange={handleInputChange}
-                required
-              />
+              <div className="form-group">
+                <label>Telefon raqami</label>
+                <input
+                  type="text"
+                  name="phone"
+                  placeholder="+998 90 123 45 67"
+                  value={formFields.phone}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-              <input
-                name="hired"
-                type="date"
-                value={formFields.hired}
-                onChange={handleInputChange}
-                required
-              />
+              <div className="form-group">
+                <label>Oylik maoshi (so'm)</label>
+                <input
+                  type="number"
+                  name="salary"
+                  placeholder="5000000"
+                  value={formFields.salary}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-              <select
-                name="status"
-                value={formFields.status}
-                onChange={handleInputChange}
-                required
-              >
-                {STATUS_LIST.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
+              <div className="form-group">
+                <label>Ishga qabul qilingan sana</label>
+                <input
+                  type="date"
+                  name="hired"
+                  value={formFields.hired}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-              <button type="submit">{editingId ? "💾 Saqlash" : "➕ Xodim qo'shish"}</button>
+              <div className="form-group">
+                <label>Holati</label>
+                <select name="status" value={formFields.status} onChange={handleInputChange}>
+                  {STATUS_LIST.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="cancel-button" onClick={handleCloseModal}>
+                  Bekor qilish
+                </button>
+                <button type="submit" className="save-button">
+                  {editingId ? "Saqlash" : "Qo'shish"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
