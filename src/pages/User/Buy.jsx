@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { getSessionUser, readScopedState, updateSalesReview, writeScopedState } from "../../utils/userStorage";
+import { getSessionUser, getUserPurchases, saveUserPurchases, updateSalesReview } from "../../utils/userStorage";
+import ConfirmModal from "../../components/ConfirmModal";
+
+const CARD_TYPES = [
+  { id: "uzcard", name: "Uzcard", prefix: "8600", icon: "🟢", bg: "linear-gradient(135deg, #059669, #10b981)" },
+  { id: "humo", name: "Humo", prefix: "9860", icon: "🔵", bg: "linear-gradient(135deg, #0284c7, #38bdf8)" },
+  { id: "visa", name: "Visa", prefix: "4", icon: "🟡", bg: "linear-gradient(135deg, #1e3a8a, #3b82f6)" },
+  { id: "mastercard", name: "Mastercard", prefix: "5", icon: "🟠", bg: "linear-gradient(135deg, #c2410c, #f97316)" },
+];
 
 const PROMO_CODES = {
   NOVA10: { label: "NOVA10", discount: 0.1, note: "10% chegirma" },
@@ -33,7 +41,7 @@ const WHEEL_SEGMENTS = [
 
 function Buy() {
   const currentUser = getSessionUser();
-  const [purchases, setPurchases] = useState(() => readScopedState("nova_user_purchases_v1", []));
+  const [purchases, setPurchases] = useState(() => getUserPurchases(currentUser?.id));
   const [ratingDraft, setRatingDraft] = useState({});
   const [satisfactionDraft, setSatisfactionDraft] = useState({});
   const [promoInput, setPromoInput] = useState("");
@@ -44,6 +52,8 @@ function Buy() {
   const [drumBeat, setDrumBeat] = useState("");
   const [slotValues, setSlotValues] = useState(["7", "7", "7"]);
   const [wheelRotation, setWheelRotation] = useState(0);
+
+  const [selectedCardType, setSelectedCardType] = useState("uzcard");
   const [paymentForm, setPaymentForm] = useState({
     cardHolder: "",
     cardNumber: "",
@@ -51,38 +61,53 @@ function Buy() {
     cvv: "",
   });
 
+  const [cancelModal, setCancelModal] = useState({ isOpen: false, purchaseId: null, productName: "" });
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, purchaseId: null, productName: "" });
+
   useEffect(() => {
-    writeScopedState("nova_user_purchases_v1", purchases);
-  }, [purchases, currentUser?.id]);
+    const sync = () => {
+      setPurchases(getUserPurchases(currentUser?.id));
+    };
+    window.addEventListener("storage", sync);
+    window.addEventListener("nova_purchases_updated", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("nova_purchases_updated", sync);
+    };
+  }, [currentUser?.id]);
 
-  const formatPrice = (price) => new Intl.NumberFormat("uz-UZ").format(price);
-  const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit", year: "numeric" });
-
-  const daysUntil = (dateStr) => {
-    const diff = Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
-    return diff;
+  const openCancelModal = (item) => {
+    setCancelModal({
+      isOpen: true,
+      purchaseId: item.id,
+      productName: item.productName || item.product || "Mahsulot",
+    });
   };
 
-  const subtotal = useMemo(
-    () => purchases.filter((p) => p.status !== "Bekor qilindi").reduce((sum, item) => sum + (Number(item.price) || 0), 0),
-    [purchases]
-  );
-
-  const discountRate = appliedPromo ? PROMO_CODES[appliedPromo]?.discount || 0 : 0;
-  const shippingCost = subtotal > 0 ? 15000 : 0;
-  const total = Math.max(subtotal - subtotal * discountRate + shippingCost, 0);
-
-  const handleCancel = (id) => {
-    if (!window.confirm("Bu buyurtmani bekor qilmoqchimisiz?")) return;
-    setPurchases((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, status: "Bekor qilindi" } : p))
+  const confirmCancel = () => {
+    if (!cancelModal.purchaseId) return;
+    const updated = purchases.map((p) =>
+      p.id === cancelModal.purchaseId ? { ...p, status: "Bekor qilindi" } : p
     );
+    setPurchases(updated);
+    saveUserPurchases(updated, currentUser?.id);
   };
 
-  const handleRemove = (id) => {
-    setPurchases((prev) => prev.filter((p) => p.id !== id));
+  const openDeleteModal = (item) => {
+    setDeleteModal({
+      isOpen: true,
+      purchaseId: item.id,
+      productName: item.productName || item.product || "Mahsulot",
+    });
   };
+
+  const confirmDelete = () => {
+    if (!deleteModal.purchaseId) return;
+    const updated = purchases.filter((p) => p.id !== deleteModal.purchaseId);
+    setPurchases(updated);
+    saveUserPurchases(updated, currentUser?.id);
+  };
+
 
   const setDraftRating = (id, rating) => {
     setRatingDraft((prev) => ({ ...prev, [id]: rating }));
@@ -144,29 +169,51 @@ function Buy() {
     setPaymentMessage(`${promo.note} qo'llanildi.`);
   };
 
+  const handleCardNumberChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, "").slice(0, 16);
+    if (raw.startsWith("8600") || raw.startsWith("5614")) setSelectedCardType("uzcard");
+    else if (raw.startsWith("9860")) setSelectedCardType("humo");
+    else if (raw.startsWith("4")) setSelectedCardType("visa");
+    else if (raw.startsWith("5")) setSelectedCardType("mastercard");
+
+    const formatted = raw.replace(/(.{4})/g, "$1 ").trim();
+    setPaymentForm((prev) => ({ ...prev, cardNumber: formatted }));
+  };
+
+  const handleExpiryChange = (e) => {
+    let raw = e.target.value.replace(/\D/g, "").slice(0, 4);
+    if (raw.length >= 3) {
+      raw = raw.slice(0, 2) + "/" + raw.slice(2, 4);
+    }
+    setPaymentForm((prev) => ({ ...prev, expiry: raw }));
+  };
+
+  const handleCvvChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, "").slice(0, 4);
+    setPaymentForm((prev) => ({ ...prev, cvv: raw }));
+  };
+
   const handleCheckout = (event) => {
     event.preventDefault();
 
     if (!purchases.length) {
-      setPaymentMessage("Hech qanday buyurtma yo'q. Avval mahsulot tanlang.");
+      setPaymentMessage("⚠️ Hech qanday buyurtma yo'q. Avval mahsulot tanlang.");
       return;
     }
 
-    if (
-      !paymentForm.cardHolder ||
-      !paymentForm.cardNumber ||
-      !paymentForm.expiry ||
-      !paymentForm.cvv
-    ) {
-      setPaymentMessage("Karta ma'lumotlarini to'liq kiriting.");
+    const cleanCard = paymentForm.cardNumber.replace(/\s/g, "");
+    if (!paymentForm.cardHolder.trim() || cleanCard.length < 16 || !paymentForm.expiry.includes("/") || paymentForm.cvv.length < 3) {
+      setPaymentMessage("⚠️ Karta ma'lumotlarini (16 ta raqam, muddat va CVV) to'liq kiriting.");
       return;
     }
 
+    const activeCardObj = CARD_TYPES.find((c) => c.id === selectedCardType) || CARD_TYPES[0];
     setPaymentMessage(
-      `Demo to'lov muvaffaqiyatli bajarildi. ${formatPrice(total)} so'mdan ${appliedPromo ? PROMO_CODES[appliedPromo].note : "chegirma qo'llanilmadi"}.`
+      `✅ ${activeCardObj.name} orqali to'lov muvaffaqiyatli amalga oshirildi! Jami: ${formatPrice(total)} so'm ${appliedPromo ? `(${PROMO_CODES[appliedPromo].note})` : ""}.`
     );
     setPaymentForm({ cardHolder: "", cardNumber: "", expiry: "", cvv: "" });
   };
+
 
   const revealReward = (reward, rotationDelta = 0) => {
     setBonusPrize(`${reward.icon} ${reward.code} — ${reward.title}`);
@@ -243,24 +290,102 @@ function Buy() {
       >
         <div
           style={{
-            background: "rgba(15,23,42,0.78)",
+            background: "rgba(15,23,42,0.85)",
             border: "1px solid rgba(148,163,184,0.2)",
-            borderRadius: 18,
-            padding: 20,
+            borderRadius: 20,
+            padding: 24,
             color: "#e2e8f0",
+            boxShadow: "0 15px 35px rgba(0,0,0,0.3)",
           }}
         >
-          <h3 style={{ marginTop: 0 }}>💳 Karta orqali to'lov</h3>
+          <h3 style={{ marginTop: 0, marginBottom: 16 }}>💳 Karta orqali to'lov</h3>
+
+          {/* VIRTUAL CARD PREVIEW */}
+          {(() => {
+            const activeCard = CARD_TYPES.find((c) => c.id === selectedCardType) || CARD_TYPES[0];
+            return (
+              <div
+                style={{
+                  background: activeCard.bg,
+                  borderRadius: 16,
+                  padding: "18px 22px",
+                  color: "#ffffff",
+                  boxShadow: "0 10px 25px rgba(0,0,0,0.35)",
+                  marginBottom: 16,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  minHeight: 160,
+                  border: "1px solid rgba(255,255,255,0.2)",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 24 }}>💳</span>
+                  <span style={{ fontWeight: 800, letterSpacing: 1.5, fontSize: 15, textTransform: "uppercase" }}>
+                    {activeCard.name}
+                  </span>
+                </div>
+                <div style={{ margin: "16px 0 12px", fontSize: 19, letterSpacing: 2.5, fontFamily: "monospace", fontWeight: 700 }}>
+                  {paymentForm.cardNumber || "•••• •••• •••• ••••"}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, textTransform: "uppercase", opacity: 0.9 }}>
+                  <div>
+                    <div style={{ fontSize: 9, opacity: 0.75 }}>KARTA EGASI</div>
+                    <div style={{ fontWeight: 600 }}>{paymentForm.cardHolder || "ISM FAMILIYA"}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 9, opacity: 0.75 }}>MUDDATI</div>
+                    <div style={{ fontWeight: 600 }}>{paymentForm.expiry || "MM/YY"}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* CARD TYPE SELECTOR TABS */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 16 }}>
+            {CARD_TYPES.map((card) => {
+              const isSelected = selectedCardType === card.id;
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => setSelectedCardType(card.id)}
+                  style={{
+                    padding: "8px 6px",
+                    borderRadius: 10,
+                    background: isSelected ? card.bg : "rgba(255,255,255,0.06)",
+                    border: isSelected ? "1.5px solid #ffffff" : "1px solid rgba(255,255,255,0.1)",
+                    color: "#ffffff",
+                    fontWeight: 600,
+                    fontSize: 12,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 4,
+                    boxShadow: isSelected ? "0 4px 12px rgba(0,0,0,0.3)" : "none",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <span>{card.icon}</span>
+                  <span>{card.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
           <form onSubmit={handleCheckout} style={{ display: "grid", gap: 12 }}>
             <input
               id="card-holder"
               name="cardHolder"
               type="text"
               autoComplete="cc-name"
-              placeholder="Karta egasi"
+              placeholder="Karta egasi (Masalan: BOBOMUROD JUMABOYEV)"
               value={paymentForm.cardHolder}
-              onChange={(event) => setPaymentForm((prev) => ({ ...prev, cardHolder: event.target.value }))}
-              style={{ padding: 10, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff" }}
+              onChange={(event) => setPaymentForm((prev) => ({ ...prev, cardHolder: event.target.value.toUpperCase() }))}
+              style={{ padding: 11, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14 }}
+              required
             />
             <input
               id="card-number"
@@ -268,10 +393,11 @@ function Buy() {
               type="text"
               inputMode="numeric"
               autoComplete="cc-number"
-              placeholder="1234 5678 9012 3456"
+              placeholder="16 xonali karta raqami (8600 / 9860 / 4... / 5...)"
               value={paymentForm.cardNumber}
-              onChange={(event) => setPaymentForm((prev) => ({ ...prev, cardNumber: event.target.value }))}
-              style={{ padding: 10, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff" }}
+              onChange={handleCardNumberChange}
+              style={{ padding: 11, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, fontFamily: "monospace" }}
+              required
             />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <input
@@ -279,20 +405,24 @@ function Buy() {
                 name="expiry"
                 type="text"
                 autoComplete="cc-exp"
-                placeholder="MM/YY"
+                placeholder="Amal qilish muddati (MM/YY)"
                 value={paymentForm.expiry}
-                onChange={(event) => setPaymentForm((prev) => ({ ...prev, expiry: event.target.value }))}
-                style={{ padding: 10, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff" }}
+                onChange={handleExpiryChange}
+                maxLength={5}
+                style={{ padding: 11, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14 }}
+                required
               />
               <input
                 id="card-cvv"
                 name="cvv"
                 type="password"
                 autoComplete="cc-csc"
-                placeholder="CVV"
+                placeholder="CVV / CVC (3 xonali)"
                 value={paymentForm.cvv}
-                onChange={(event) => setPaymentForm((prev) => ({ ...prev, cvv: event.target.value }))}
-                style={{ padding: 10, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff" }}
+                onChange={handleCvvChange}
+                maxLength={4}
+                style={{ padding: 11, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14 }}
+                required
               />
             </div>
 
@@ -302,7 +432,7 @@ function Buy() {
                 name="promoCode"
                 type="text"
                 autoComplete="off"
-                placeholder="Promokod"
+                placeholder="Promokod (masalan: NOVA10, WELCOME5)"
                 value={promoInput}
                 onChange={(event) => setPromoInput(event.target.value)}
                 style={{ flex: 1, padding: 10, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff" }}
@@ -324,13 +454,19 @@ function Buy() {
               <span>Yetkazib berish</span>
               <strong>{formatPrice(shippingCost)} so'm</strong>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 20, fontWeight: 700, color: "#fff" }}>
-              <span>Umumiy</span>
-              <span>{formatPrice(total)} so'm</span>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 18, fontWeight: 700, color: "#fff", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 10 }}>
+              <span>Jami to'lov</span>
+              <span style={{ color: "#38bdf8" }}>{formatPrice(total)} so'm</span>
             </div>
 
-            <button type="submit" className="shop-buy-btn">To'lovni tasdiqlash</button>
-            {paymentMessage && <p style={{ margin: 0, color: "#a7f3d0", fontSize: 14 }}>{paymentMessage}</p>}
+            <button type="submit" className="shop-buy-btn" style={{ marginTop: 8 }}>
+              💳 To'lovni tasdiqlash
+            </button>
+            {paymentMessage && (
+              <p style={{ margin: "4px 0 0", color: paymentMessage.includes("✅") ? "#34d399" : "#f87171", fontSize: 13.5, fontWeight: 500 }}>
+                {paymentMessage}
+              </p>
+            )}
           </form>
         </div>
 
@@ -578,11 +714,11 @@ function Buy() {
 
                 <div className="my-order-rating">
                   {purchase.status === "Yetkazilmoqda" || purchase.status === "Kutilmoqda" ? (
-                    <button className="delete-button" onClick={() => handleCancel(purchase.id)}>
-                      ✕ Cancel
+                    <button className="delete-button" onClick={() => openCancelModal(purchase)}>
+                      ✕ Bekor qilish
                     </button>
                   ) : purchase.status === "Bekor qilindi" ? (
-                    <button className="delete-button" onClick={() => handleRemove(purchase.id)}>
+                    <button className="delete-button" onClick={() => openDeleteModal(purchase)}>
                       🗑️ Ro'yxatdan o'chirish
                     </button>
                   ) : purchase.myRating > 0 ? (
@@ -618,6 +754,31 @@ function Buy() {
           })}
         </div>
       )}
+
+      {/* CONFIRMATION MODALS */}
+      <ConfirmModal
+        isOpen={cancelModal.isOpen}
+        onClose={() => setCancelModal({ isOpen: false, purchaseId: null, productName: "" })}
+        onConfirm={confirmCancel}
+        title="Buyurtmani bekor qilish"
+        message={`"${cancelModal.productName}" buyurtmasini bekor qilmoqchimisiz? Ushbu amalni ortga qaytarib bo'lmaydi.`}
+        confirmText="Ha, bekor qilish"
+        cancelText="Yo'q, qolsin"
+        type="danger"
+        icon="⚠️"
+      />
+
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, purchaseId: null, productName: "" })}
+        onConfirm={confirmDelete}
+        title="Ro'yxatdan o'chirish"
+        message={`"${deleteModal.productName}" buyurtmasini tarixdan butunlay o'chirmoqchimisiz?`}
+        confirmText="Ha, o'chirish"
+        cancelText="Qaytish"
+        type="danger"
+        icon="🗑️"
+      />
     </div>
   );
 }

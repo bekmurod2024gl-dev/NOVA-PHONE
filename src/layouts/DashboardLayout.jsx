@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useLocale } from "../context/LocaleContext";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { clearSessionUser, getCurrentRole, getSessionUser, safeParse } from "../utils/userStorage";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 const MENUS = {
   admin: {
@@ -95,11 +96,12 @@ function DashboardLayout() {
     const savedName = localStorage.getItem("nova_display_name");
     const isOldName = savedSettings?.profile?.name === "Bobomurod Egamberdiyev" || savedName === "Bobomurod Egamberdiyev" || savedName === "Bobomurod Egamberdiyev bobomurod";
 
-    const name =
-      (!isOldName && savedSettings?.profile?.name) ||
-      (!isOldName && savedName) ||
-      sessionUser?.displayName ||
-      (role === "admin" ? "Bobomurod jumaboyev" : "Foydalanuvchi");
+    const name = role === "user"
+      ? sessionUser?.username || sessionUser?.displayName || "Foydalanuvchi"
+      : (!isOldName && savedSettings?.profile?.name) ||
+        (!isOldName && savedName) ||
+        sessionUser?.displayName ||
+        (role === "admin" ? "Bobomurod jumaboyev" : "Foydalanuvchi");
 
     const position =
       savedSettings?.profile?.position ||
@@ -116,11 +118,12 @@ function DashboardLayout() {
       const savedName = localStorage.getItem("nova_display_name");
       const isOldName = savedSettings?.profile?.name === "Bobomurod Egamberdiyev" || savedName === "Bobomurod Egamberdiyev" || savedName === "Bobomurod Egamberdiyev bobomurod";
 
-      const name =
-        (!isOldName && savedSettings?.profile?.name) ||
-        (!isOldName && savedName) ||
-        sessionUser?.displayName ||
-        (role === "admin" ? "Bobomurod jumaboyev" : "Foydalanuvchi");
+      const name = role === "user"
+        ? sessionUser?.username || sessionUser?.displayName || "Foydalanuvchi"
+        : (!isOldName && savedSettings?.profile?.name) ||
+          (!isOldName && savedName) ||
+          sessionUser?.displayName ||
+          (role === "admin" ? "Bobomurod jumaboyev" : "Foydalanuvchi");
 
       const position =
         savedSettings?.profile?.position ||
@@ -253,11 +256,7 @@ function DashboardLayout() {
 
         <div className="sidebar-footer">
           <div className="sidebar-lang">
-            <select value={lang} onChange={(e) => setLang(e.target.value)}>
-              <option value="uz">UZ</option>
-              <option value="ru">RU</option>
-              <option value="en">EN</option>
-            </select>
+            <LanguageSwitcher compact />
           </div>
 
           <button className="logout-button" onClick={handleLogout}>
@@ -298,6 +297,7 @@ function DashboardLayout() {
           </div>
 
           <div className="topbar-actions">
+            <LanguageSwitcher compact />
             <button className="action-button" type="button" onClick={handleQuickAction}>
               ⚡ {role === "admin" ? t("quick_add") : role === "manager" ? t("quick_review") : t("quick_shop")}
             </button>

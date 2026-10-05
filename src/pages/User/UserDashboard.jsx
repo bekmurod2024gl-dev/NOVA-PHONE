@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getSessionUser, submitJobApplication, getUserDisplayName } from "../../utils/userStorage";
+import { getSessionUser, submitJobApplication, getUserDisplayName, getUserPurchases, getUserLiked } from "../../utils/userStorage";
 
 const catalog = [
   {
@@ -391,15 +391,32 @@ const catalog = [
 ];
 
 function UserDashboard() {
-  const [purchases] = useState(() => {
-    const saved = localStorage.getItem("nova_user_purchases_v1");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [currentUser, setCurrentUser] = useState(() => getSessionUser());
+  const [purchases, setPurchases] = useState(() => getUserPurchases(currentUser?.id));
+  const [liked, setLiked] = useState(() => getUserLiked(currentUser?.id));
 
-  const [liked] = useState(() => {
-    const saved = localStorage.getItem("nova_user_liked_v1");
-    return saved ? JSON.parse(saved) : [];
-  });
+  useEffect(() => {
+    const sync = () => {
+      const u = getSessionUser();
+      setCurrentUser(u);
+      setPurchases(getUserPurchases(u?.id));
+      setLiked(getUserLiked(u?.id));
+    };
+
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener("nova_purchases_updated", sync);
+    window.addEventListener("nova_liked_updated", sync);
+    window.addEventListener("nova_sales_updated", sync);
+    window.addEventListener("nova_profile_updated", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("nova_purchases_updated", sync);
+      window.removeEventListener("nova_liked_updated", sync);
+      window.removeEventListener("nova_sales_updated", sync);
+      window.removeEventListener("nova_profile_updated", sync);
+    };
+  }, []);
 
   const [showJobModal, setShowJobModal] = useState(false);
   const [jobPosition, setJobPosition] = useState("Sotuvchi-maslahatchi");
@@ -407,7 +424,6 @@ function UserDashboard() {
   const [jobMessage, setJobMessage] = useState("");
   const [jobSubmitted, setJobSubmitted] = useState(false);
 
-  const currentUser = getSessionUser();
   const isAlreadyEmployee = currentUser?.isEmployee;
 
   const handleJobSubmit = (e) => {
@@ -430,16 +446,16 @@ function UserDashboard() {
     }, 2500);
   };
 
-  const displayName = localStorage.getItem("nova_display_name") || "Mijoz";
+  const displayName = getUserDisplayName(currentUser);
   const formatPrice = (price) => new Intl.NumberFormat("uz-UZ").format(price);
   const formatDate = (dateStr) =>
     new Date(dateStr).toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit" });
 
   const totalSpent = purchases
     .filter((p) => p.status !== "Bekor qilindi")
-    .reduce((sum, p) => sum + p.price, 0);
+    .reduce((sum, p) => sum + (Number(p.price) || 0), 0);
 
-  const activeCount = purchases.filter((p) => p.status === "Yetkazilmoqda").length;
+  const activeCount = purchases.filter((p) => p.status === "Yetkazilmoqda" || p.status === "Kutilmoqda").length;
   const deliveredCount = purchases.filter((p) => p.status === "Yetkazildi").length;
 
   // Eng yaqin yetkazib berish
@@ -630,23 +646,29 @@ function UserDashboard() {
           </div>
         ) : (
           <div className="my-orders-list">
-            {purchases.slice(0, 2).map((purchase) => (
-              <div className="my-order-card" key={purchase.id}>
-                <img
-                  src={purchase.image}
-                  alt={purchase.productName}
-                  onError={(e) => (e.target.src = "https://placehold.co/120x120?text=📱")}
-                />
-                <div className="my-order-info">
-                  <h4>{purchase.productName}</h4>
-                  <p>{formatPrice(purchase.price)} so'm</p>
-                  <span className={`status-badge ${statusClass(purchase.status)}`}>
-                    {purchase.status}
-                  </span>
+            {purchases.slice(0, 4).map((purchase) => {
+              const productName = purchase.productName || purchase.product || "Mahsulot";
+              const productPrice = Number(purchase.price) || 0;
+              const productImage = purchase.image || "/images/iphone15pro.jpeg";
+              return (
+                <div className="my-order-card" key={purchase.id}>
+                  <img
+                    src={productImage}
+                    alt={productName}
+                    onError={(e) => (e.currentTarget.src = "/images/images.jpeg")}
+                  />
+                  <div className="my-order-info">
+                    <h4>{productName}</h4>
+                    <p>{formatPrice(productPrice)} so'm</p>
+                    <span className={`status-badge ${statusClass(purchase.status)}`}>
+                      {purchase.status || "Yetkazilmoqda"}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+
         )}
       </div>
 

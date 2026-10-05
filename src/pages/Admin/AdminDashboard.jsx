@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getSalesRecords, isFakePerson } from "../../utils/userStorage";
+import {
+  getAccounts,
+  getCompletedSalesRecords,
+  getSalesRecords,
+  isFakePerson,
+} from "../../utils/userStorage";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -9,43 +14,46 @@ function AdminDashboard() {
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [chartPeriod, setChartPeriod] = useState("7");
 
-  const [products] = useState([
-    { id: 1, name: "iPhone 15 Pro", price: "12 500 000" },
-    { id: 2, name: "Samsung S24 Ultra", price: "14 800 000" },
-    { id: 3, name: "Google Pixel 9", price: "9 200 000" },
-  ]);
-
-  const [orders, setOrders] = useState(() => {
-    return getSalesRecords()
-      .filter((s) => !isFakePerson(s.customer))
-      .map((r) => ({
-        id: r.id,
-        user: r.customer,
-        product: r.product,
-        price: new Intl.NumberFormat("uz-UZ").format(r.price),
-      }));
-  });
+  const [accounts, setAccounts] = useState(() => getAccounts());
+  const [rawRecords, setRawRecords] = useState(() =>
+    getSalesRecords().filter((s) => !isFakePerson(s.customer))
+  );
 
   useEffect(() => {
     const sync = () => {
-      setOrders(
-        getSalesRecords()
-          .filter((s) => !isFakePerson(s.customer))
-          .map((r) => ({
-            id: r.id,
-            user: r.customer,
-            product: r.product,
-            price: new Intl.NumberFormat("uz-UZ").format(r.price),
-          }))
-      );
+      setAccounts(getAccounts());
+      setRawRecords(getSalesRecords().filter((s) => !isFakePerson(s.customer)));
     };
     window.addEventListener("storage", sync);
     window.addEventListener("nova_sales_updated", sync);
+    window.addEventListener("nova_profile_updated", sync);
+    window.addEventListener("nova_purchases_updated", sync);
     return () => {
       window.removeEventListener("storage", sync);
       window.removeEventListener("nova_sales_updated", sync);
+      window.removeEventListener("nova_profile_updated", sync);
+      window.removeEventListener("nova_purchases_updated", sync);
     };
   }, []);
+
+  const orders = rawRecords.map((r) => ({
+    id: r.id,
+    user: r.customer,
+    product: r.product,
+    price: new Intl.NumberFormat("uz-UZ").format(r.price),
+  }));
+
+  const realUsersCount = accounts.length || 2;
+  const totalProductsCount = 36;
+  const completedRecords = getCompletedSalesRecords(rawRecords);
+  const totalRevenue = completedRecords.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
+  const formattedRevenue = totalRevenue >= 1000000
+    ? (totalRevenue / 1000000).toFixed(1).replace(".0", "") + "M"
+    : totalRevenue > 0
+    ? new Intl.NumberFormat("uz-UZ").format(totalRevenue) + " so'm"
+    : "0 so'm";
+  const totalOrdersCount = rawRecords.length;
+  const completedOrdersCount = completedRecords.length;
 
   const chartData = {
     7: {
@@ -96,52 +104,48 @@ function AdminDashboard() {
     users: {
       title: "Jami foydalanuvchilar",
       icon: "👥",
-      value: "1,248",
-      description:
-        "Mobile Store tizimida ro‘yxatdan o‘tgan barcha foydalanuvchilar.",
-
+      value: `${realUsersCount} ta`,
+      description: "Mobile Store tizimida ro'yxatdan o'tgan haqiqiy foydalanuvchilar soni.",
       details: [
-        "Faol foydalanuvchilar: 1,120",
-        "Yangi foydalanuvchilar: 128",
-        "Bu oy o‘sish: +12%",
+        `Jami ro'yxatdan o'tganlar: ${realUsersCount} ta`,
+        `Real mijozlar: ${accounts.filter((a) => a.role === "user").length} ta`,
+        `Xodimlar: ${accounts.filter((a) => a.isEmployee).length} ta`,
       ],
     },
 
     products: {
       title: "Jami mahsulotlar",
       icon: "📱",
-      value: products.length,
-
-      description: "Do‘konda mavjud bo‘lgan barcha mahsulotlar.",
-
+      value: `${totalProductsCount} ta`,
+      description: "Do'konda sotuvda mavjud barcha original smartfonlar.",
       details: [
-        `Jami mahsulotlar: ${products.length}`,
-        "Yangi mahsulotlar: +8",
-        "Omborda mavjud: 342",
+        `Jami modellar: ${totalProductsCount} ta`,
+        "Brendlar: Apple, Samsung, Xiaomi, Google, OnePlus, Huawei, Realme, Vivo, Oppo",
+        "Kafolat: 1 yil rasmiy kafolat",
       ],
     },
 
     sales: {
       title: "Umumiy savdo",
       icon: "💰",
-      value: "245M",
-
-      description: "Do‘konning umumiy savdo ko‘rsatkichi.",
-
-      details: ["Bugungi savdo: 18.5M", "Bu oy: 245M", "O‘sish: +18.5%"],
+      value: formattedRevenue,
+      description: "Do'kondan qilingan barcha haqiqiy xaridlar va tushum ko'rsatkichi.",
+      details: [
+        `Jami haqiqiy tushum: ${new Intl.NumberFormat("uz-UZ").format(totalRevenue)} so'm`,
+        `O'rtacha chek: ${completedOrdersCount > 0 ? new Intl.NumberFormat("uz-UZ").format(Math.round(totalRevenue / completedOrdersCount)) + " so'm" : "0 so'm"}`,
+        "To'lov usullari: Uzcard, Humo, Visa, Mastercard",
+      ],
     },
 
     orders: {
       title: "Buyurtmalar",
       icon: "📦",
-      value: "2,486",
-
-      description: "Tizimdagi barcha buyurtmalar statistikasi.",
-
+      value: `${totalOrdersCount} ta`,
+      description: "Mijozlar tomonidan rasmiylashtirilgan haqiqiy buyurtmalar.",
       details: [
-        "Jami buyurtmalar: 2,486",
-        "Bugungi buyurtmalar: 24",
-        "Jarayondagi buyurtmalar: 18",
+        `Jami buyurtmalar: ${totalOrdersCount} ta`,
+        `Yetkazilganlar: ${rawRecords.filter((r) => r.status === "Yetkazildi").length} ta`,
+        `Yo'ldagilar: ${rawRecords.filter((r) => r.status === "Yetkazilmoqda" || r.status === "Kutilmoqda").length} ta`,
       ],
     },
   };
@@ -179,9 +183,9 @@ function AdminDashboard() {
           <div>
             <p>Jami foydalanuvchilar</p>
 
-            <h2>1,248</h2>
+            <h2>{realUsersCount}</h2>
 
-            <span>+12% bu oy</span>
+            <span>haqiqiy ro'yxatdan o'tganlar</span>
           </div>
         </div>
 
@@ -194,9 +198,9 @@ function AdminDashboard() {
           <div>
             <p>Jami mahsulotlar</p>
 
-            <h2>{products.length}</h2>
+            <h2>{totalProductsCount}</h2>
 
-            <span>+8 ta yangi</span>
+            <span>katalogda faol</span>
           </div>
         </div>
 
@@ -209,9 +213,9 @@ function AdminDashboard() {
           <div>
             <p>Umumiy savdo</p>
 
-            <h2>245M</h2>
+            <h2>{formattedRevenue}</h2>
 
-            <span>+18.5%</span>
+            <span>haqiqiy tushum</span>
           </div>
         </div>
 
@@ -224,12 +228,13 @@ function AdminDashboard() {
           <div>
             <p>Buyurtmalar</p>
 
-            <h2>2,486</h2>
+            <h2>{totalOrdersCount}</h2>
 
-            <span>+24 bugun</span>
+            <span>jami xaridlar</span>
           </div>
         </div>
       </div>
+
 
       <div className="dashboard-grid">
         <div className="chart-card">

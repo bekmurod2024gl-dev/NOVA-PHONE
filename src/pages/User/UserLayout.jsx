@@ -1,10 +1,13 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { clearSessionUser, getSessionUser } from "../../utils/userStorage";
+import { clearSessionUser, getSessionUser, getUserDisplayName } from "../../utils/userStorage";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
+import { useLocale } from "../../context/LocaleContext";
 
 function UserLayout() {
   const navigate = useNavigate();
   const currentUser = getSessionUser();
-  const displayName = currentUser?.username || localStorage.getItem("nova_display_name") || "Foydalanuvu";
+  const displayName = getUserDisplayName(currentUser);
+  const { t } = useLocale();
 
   function handleLogout() {
     clearSessionUser();
@@ -15,24 +18,30 @@ function UserLayout() {
     <div className="user-layout">
       {/* CHAP TARAF - SIDEBAR */}
       <aside className="user-sidebar">
-        
         {/* LOGO */}
         <div className="user-sidebar-logo">
-          <div className="logo-icon"><img src="/images/logo.png" alt="NOVA PHONE" /></div>
+          <div className="logo-icon">
+            <img src="/images/logo.png" alt="NOVA PHONE" />
+          </div>
           <div>
             <h2>NOVA PHONE</h2>
             <span>Online Do'kon</span>
           </div>
         </div>
 
-        {/* MENYULAR (To'g'ridan-to'g'ri yozildi, xato bermaydi) */}
+        {/* TIL ALMASHTIRISH (SIDEBAR) */}
+        <div className="user-sidebar-lang" style={{ marginBottom: 16 }}>
+          <LanguageSwitcher compact />
+        </div>
+
+        {/* MENYULAR */}
         <nav className="user-sidebar-menu">
           <NavLink to="/user" className="user-menu-link" end>
             <span>📊</span> Bosh sahifa
           </NavLink>
 
           <p className="user-menu-title">BO'LIMLAR</p>
-          
+
           <NavLink to="/user/products" className="user-menu-link">
             <span>📱</span> Mahsulotlar
           </NavLink>
@@ -55,12 +64,15 @@ function UserLayout() {
 
         {/* CHIQISH */}
         <button className="user-logout-btn" onClick={handleLogout}>
-          🚪 Chiqish
+          🚪 {t("logout") || "Chiqish"}
         </button>
       </aside>
 
       {/* O'NG TARAF - KONTENT */}
       <main className="user-content">
+        <header className="user-content-header" style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
+          <LanguageSwitcher />
+        </header>
         <Outlet />
       </main>
     </div>

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getCompletedSalesRecords, getSalesRecords, isFakePerson } from "../../utils/userStorage";
 
 const chartData = {
   7: {
@@ -34,6 +35,32 @@ function Analytics() {
   const [chartPeriod, setChartPeriod] = useState("7");
   const currentChart = chartData[chartPeriod];
 
+  const [salesRecords, setSalesRecords] = useState(() =>
+    getSalesRecords().filter((s) => !isFakePerson(s.customer))
+  );
+
+  useEffect(() => {
+    const sync = () => {
+      setSalesRecords(getSalesRecords().filter((s) => !isFakePerson(s.customer)));
+    };
+    window.addEventListener("storage", sync);
+    window.addEventListener("nova_sales_updated", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("nova_sales_updated", sync);
+    };
+  }, []);
+
+  const completedSales = getCompletedSalesRecords(salesRecords);
+  const totalRevenue = completedSales.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
+  const totalOrders = completedSales.length;
+  const avgCheck = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
+  const formattedRevenue = totalRevenue >= 1000000
+    ? (totalRevenue / 1000000).toFixed(1).replace(".0", "") + "M"
+    : totalRevenue > 0
+    ? new Intl.NumberFormat("uz-UZ").format(totalRevenue) + " so'm"
+    : "0 so'm";
+
   const formatSum = (value) => new Intl.NumberFormat("uz-UZ").format(value);
 
   return (
@@ -49,9 +76,9 @@ function Analytics() {
         <div className="stat-card purple">
           <div className="stat-icon">💰</div>
           <div>
-            <p>Bu oy tushum</p>
-            <h2>245M</h2>
-            <span>+18.5% o'tgan oyga nisbatan</span>
+            <p>Umumiy tushum</p>
+            <h2>{formattedRevenue}</h2>
+            <span>haqiqiy savdo ko'rsatkichi</span>
           </div>
         </div>
 
@@ -59,8 +86,8 @@ function Analytics() {
           <div className="stat-icon">🧾</div>
           <div>
             <p>O'rtacha chek</p>
-            <h2>{formatSum(11250000)}</h2>
-            <span>+4.2%</span>
+            <h2>{formatSum(avgCheck)} so'm</h2>
+            <span>bir xarid uchun o'rtacha</span>
           </div>
         </div>
 
@@ -68,8 +95,8 @@ function Analytics() {
           <div className="stat-icon">📦</div>
           <div>
             <p>Sotilgan mahsulotlar</p>
-            <h2>265 ta</h2>
-            <span>+12% bu oy</span>
+            <h2>{totalOrders} ta</h2>
+            <span>jami buyurtmalar soni</span>
           </div>
         </div>
 
@@ -77,11 +104,12 @@ function Analytics() {
           <div className="stat-icon">😊</div>
           <div>
             <p>Mijozlar mamnunligi</p>
-            <h2>87%</h2>
-            <span>+3% o'sish</span>
+            <h2>98%</h2>
+            <span>ijobiy sharhlar</span>
           </div>
         </div>
       </div>
+
 
       <div className="dashboard-grid">
         <div className="chart-card">

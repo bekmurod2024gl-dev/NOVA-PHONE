@@ -22,10 +22,43 @@ export function normalizePhone(value = "") {
 
 export function getUserDisplayName(user = {}) {
   if (!user) return "Foydalanuvchi";
-  if (user.displayName) return user.displayName;
-  if (user.name) return user.name;
-  const full = [user.firstName, user.surname].filter(Boolean).join(" ").trim();
-  if (full) return full;
+  if (user.role === "admin") {
+    const profile = getAdminProfile();
+    return profile.name || "Bobomurod jumaboyev";
+  }
+  if (user.role === "user" && user.username?.trim()) {
+    return user.username.trim();
+  }
+
+  const raw = user.displayName || user.name;
+  if (raw && typeof raw === "string") {
+    let words = raw.trim().split(/\s+/);
+    const username = (user.username || "").trim().toLowerCase();
+    if (
+      username &&
+      words.length > 2 &&
+      words[words.length - 1].toLowerCase() === username &&
+      words.slice(0, -1).some((word) => word.toLowerCase() === username)
+    ) {
+      words = words.slice(0, -1);
+    }
+    const normalizedRaw = words.join(" ");
+    if (words.length === 2 && words[0].toLowerCase() === words[1].toLowerCase()) {
+      return words[0];
+    }
+    if (words.length > 0 && !["men1 men1", "Foydalanuvu"].includes(normalizedRaw)) {
+      return normalizedRaw;
+    }
+  }
+
+  const fn = (user.firstName || "").trim();
+  const sn = (user.surname || "").trim();
+  if (fn && sn) {
+    if (fn.toLowerCase() === sn.toLowerCase()) return fn;
+    return `${fn} ${sn}`;
+  }
+  if (fn) return fn;
+  if (sn) return sn;
   return user.username || "Foydalanuvchi";
 }
 
@@ -79,6 +112,9 @@ export function getSessionUser() {
     sessionUser.position = profile.position;
     sessionUser.email = profile.email;
     sessionUser.phone = profile.phone;
+  } else if (sessionUser.role === "user" && sessionUser.username) {
+    sessionUser.displayName = sessionUser.username;
+    sessionUser.name = sessionUser.username;
   }
 
   return sessionUser;
@@ -135,8 +171,35 @@ export function getSalesRecords() {
   return Array.isArray(records) ? records : [];
 }
 
+export function getCompletedSalesRecords(records = getSalesRecords()) {
+  return records.filter((record) => record && (!record.status || record.status === "Yetkazildi"));
+}
+
 export function setSalesRecords(records) {
   localStorage.setItem("nova_sales_records_v1", JSON.stringify(records));
+  window.dispatchEvent(new Event("nova_sales_updated"));
+}
+
+export function updateSalesRecordStatus(id, status) {
+  const updateStatus = (records) => Array.isArray(records)
+    ? records.map((record) => String(record.id) === String(id) ? { ...record, status } : record)
+    : [];
+
+  ["nova_orders_v1", "nova_sales_v1"].forEach((key) => {
+    const saved = safeParse(localStorage.getItem(key), []);
+    localStorage.setItem(key, JSON.stringify(updateStatus(saved)));
+  });
+  setSalesRecords(updateStatus(getSalesRecords()));
+}
+
+export function deleteSalesRecord(id) {
+  ["nova_orders_v1", "nova_sales_v1"].forEach((key) => {
+    const saved = safeParse(localStorage.getItem(key), []);
+    if (Array.isArray(saved)) {
+      localStorage.setItem(key, JSON.stringify(saved.filter((record) => String(record.id) !== String(id))));
+    }
+  });
+  setSalesRecords(getSalesRecords().filter((record) => String(record.id) !== String(id)));
 }
 
 export const JOB_APPLICATIONS_KEY = "nova_job_applications_v1";
@@ -298,11 +361,9 @@ export function updateSalesReview({ purchaseId, rating, satisfaction }) {
   return updated;
 }
 
-export function registerAccount({ username, email, password, surname = "", phone = "" }) {
-  const trimmedUsername = username.trim();
-  const trimmedEmail = email.trim().toLowerCase();
-  const trimmedSurname = surname.trim();
-  const cleanedPhone = normalizePhone(phone);
+export function registerAccount({ username, password, email = "", surname = "", phone = "" }) {
+  const trimmedUsername = (username || "").trim();
+  const cleanPassword = (password || "").trim();
 
   const reservedNames = ["admin", "manager", "bobomurod"];
 
@@ -310,29 +371,40 @@ export function registerAccount({ username, email, password, surname = "", phone
     throw new Error("Bu username rezerv qilingan. Boshqa username tanlang!");
   }
 
-  if (!trimmedUsername || !trimmedEmail || !password || !trimmedSurname || !cleanedPhone) {
-    throw new Error("Username, familiya, telefon va parolni to'liq kiriting!");
+  if (!trimmedUsername) {
+    throw new Error("Username kiriting!");
+  }
+
+  if (!cleanPassword) {
+    throw new Error("Parol kiriting!");
+  }
+
+  if (cleanPassword.length < 4) {
+    throw new Error("Parol kamida 4 ta belgidan iborat bo'lishi kerak!");
   }
 
   const accounts = getAccounts();
   const alreadyExists = accounts.some(
-    (account) =>
-      account.username.toLowerCase() === trimmedUsername.toLowerCase() ||
-      account.email.toLowerCase() === trimmedEmail
+    (account) => account.username.toLowerCase() === trimmedUsername.toLowerCase()
   );
 
   if (alreadyExists) {
-    throw new Error("Bu username yoki email allaqachon mavjud!");
+    throw new Error("Bu username allaqachon mavjud! Boshqa nom tanlang.");
   }
 
+  const trimmedEmail = (email || "").trim().toLowerCase();
+  const trimmedSurname = (surname || "").trim();
+  const cleanedPhone = phone ? normalizePhone(phone) : "";
+
   const newUser = {
-    id: Date.now().toString(),
+    id: "user_" + Date.now(),
     username: trimmedUsername,
     firstName: trimmedUsername,
     surname: trimmedSurname,
     phone: cleanedPhone,
     email: trimmedEmail,
-    password,
+    password: cleanPassword,
+    displayName: trimmedUsername,
     role: "user",
     createdAt: new Date().toISOString().slice(0, 10),
     isEmployee: false,
@@ -388,7 +460,7 @@ export function loginAccount({ username, email, password }) {
 
   const match = accounts.find((account) => {
     const sameUsername = account.username.toLowerCase() === trimmedUsername.toLowerCase();
-    const sameEmail = account.email.toLowerCase() === trimmedEmail;
+    const sameEmail = trimmedEmail && account.email && account.email.toLowerCase() === trimmedEmail;
     return (sameUsername || sameEmail) && account.password === password;
   });
 
@@ -400,18 +472,73 @@ export function loginAccount({ username, email, password }) {
   return match;
 }
 
-export function resetAccountPassword({ username, email, newPassword }) {
-  const account = findAccount({ username });
-  if (!account || account.email.toLowerCase() !== email.trim().toLowerCase()) {
-    throw new Error("Username yoki email noto'g'ri!");
+export function resetAccountPassword({ username, newPassword }) {
+  const trimmedUsername = (username || "").trim().toLowerCase();
+  const cleanPassword = (newPassword || "").trim();
+
+  if (!trimmedUsername) {
+    throw new Error("Username kiriting!");
   }
-  if (!newPassword.trim()) {
+  if (!cleanPassword) {
     throw new Error("Yangi parolni kiriting!");
   }
+  if (cleanPassword.length < 4) {
+    throw new Error("Parol kamida 4 ta belgidan iborat bo'lishi kerak!");
+  }
 
-  const accounts = getAccounts().map((item) => (
-    item.id === account.id ? { ...item, password: newPassword.trim() } : item
+  const accounts = getAccounts();
+  const account = accounts.find((acc) => acc.username.toLowerCase() === trimmedUsername);
+  if (!account) {
+    throw new Error("Bunday username ga ega foydalanuvchi topilmadi!");
+  }
+
+  const updatedAccounts = accounts.map((item) => (
+    item.id === account.id ? { ...item, password: cleanPassword } : item
   ));
-  saveAccounts(accounts);
+  saveAccounts(updatedAccounts);
+  return true;
 }
 
+export function getUserPurchases(userId) {
+  const current = getSessionUser();
+  const targetId = userId || current?.id;
+  const scopedKey = targetId ? `nova_user_purchases_v1_${targetId}` : "nova_user_purchases_v1";
+  let items = safeParse(localStorage.getItem(scopedKey), null);
+
+  if (!items || !items.length) {
+    const unscoped = safeParse(localStorage.getItem("nova_user_purchases_v1"), []);
+    if (unscoped.length) items = unscoped;
+  }
+  return items || [];
+}
+
+export function saveUserPurchases(purchases, userId) {
+  const current = getSessionUser();
+  const targetId = userId || current?.id;
+  const scopedKey = targetId ? `nova_user_purchases_v1_${targetId}` : "nova_user_purchases_v1";
+  localStorage.setItem(scopedKey, JSON.stringify(purchases));
+  localStorage.setItem("nova_user_purchases_v1", JSON.stringify(purchases));
+  window.dispatchEvent(new Event("nova_purchases_updated"));
+  window.dispatchEvent(new Event("storage"));
+}
+
+export function getUserLiked(userId) {
+  const current = getSessionUser();
+  const targetId = userId || current?.id;
+  const scopedKey = targetId ? `nova_user_liked_v1_${targetId}` : "nova_user_liked_v1";
+  let items = safeParse(localStorage.getItem(scopedKey), null);
+  if (!items) {
+    items = safeParse(localStorage.getItem("nova_user_liked_v1"), []);
+  }
+  return items || [];
+}
+
+export function saveUserLiked(liked, userId) {
+  const current = getSessionUser();
+  const targetId = userId || current?.id;
+  const scopedKey = targetId ? `nova_user_liked_v1_${targetId}` : "nova_user_liked_v1";
+  localStorage.setItem(scopedKey, JSON.stringify(liked));
+  localStorage.setItem("nova_user_liked_v1", JSON.stringify(liked));
+  window.dispatchEvent(new Event("nova_liked_updated"));
+  window.dispatchEvent(new Event("storage"));
+}

@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { getSalesRecords, isFakePerson, safeParse } from "../../utils/userStorage";
+import {
+  deleteSalesRecord,
+  getSalesRecords,
+  isFakePerson,
+  safeParse,
+  updateSalesRecordStatus,
+} from "../../utils/userStorage";
 
 const STATUS_LIST = ["Kutilmoqda", "Yetkazilmoqda", "Yetkazildi", "Bekor qilindi"];
 
@@ -59,6 +65,7 @@ function Orders() {
     });
 
   const handleStatusChange = (id, newStatus) => {
+    updateSalesRecordStatus(id, newStatus);
     setOrders((prev) =>
       prev.map((order) =>
         order.id === id ? { ...order, status: newStatus } : order
@@ -68,6 +75,7 @@ function Orders() {
 
   const handleDelete = (id) => {
     if (!window.confirm("Bu buyurtmani o'chirmoqchimisiz?")) return;
+    deleteSalesRecord(id);
     setOrders((prev) => prev.filter((order) => order.id !== id));
   };
 

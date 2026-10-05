@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSessionUser, readScopedState, writeScopedState } from "../../utils/userStorage";
+import { getSessionUser, getUserLiked, saveUserLiked } from "../../utils/userStorage";
 
 // Mahsulotlar ro'yxati (Products.jsx dagi bilan aynan bir xil bo'lishi kerak)
 const HARDCODED_PRODUCTS = [
@@ -46,11 +46,12 @@ function Liked() {
   const [catalog] = useState(HARDCODED_PRODUCTS);
 
   const currentUser = getSessionUser();
-  const [liked, setLiked] = useState(() => readScopedState("nova_user_liked_v1", []));
+  const [liked, setLiked] = useState(() => getUserLiked(currentUser?.id));
 
   useEffect(() => {
-    writeScopedState("nova_user_liked_v1", liked);
+    saveUserLiked(liked, currentUser?.id);
   }, [liked, currentUser?.id]);
+
 
   const formatPrice = (price) => new Intl.NumberFormat("uz-UZ").format(price);
   

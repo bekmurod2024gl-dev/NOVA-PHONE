@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "../../context/LocaleContext";
-import { getSessionUser, readScopedState, recordUserPurchase, writeScopedState } from "../../utils/userStorage";
+import { getSessionUser, getUserLiked, getUserPurchases, recordUserPurchase, saveUserLiked, saveUserPurchases } from "../../utils/userStorage";
 
 const BRANDS = ["Apple", "Samsung", "Xiaomi", "Google", "OnePlus", "Huawei", "Realme", "Oppo", "Vivo"];
 
@@ -55,16 +55,17 @@ function Products() {
 
   const currentUser = getSessionUser();
 
-  const [liked, setLiked] = useState(() => readScopedState("nova_user_liked_v1", []));
+  const [liked, setLiked] = useState(() => getUserLiked(currentUser?.id));
 
-  const [purchases, setPurchases] = useState(() => readScopedState("nova_user_purchases_v1", []));
+  const [purchases, setPurchases] = useState(() => getUserPurchases(currentUser?.id));
 
   const [search, setSearch] = useState("");
   const [brandFilter, setBrandFilter] = useState("all");
   const [justBought, setJustBought] = useState(null);
 
-  useEffect(() => { writeScopedState("nova_user_liked_v1", liked); }, [liked, currentUser?.id]);
-  useEffect(() => { writeScopedState("nova_user_purchases_v1", purchases); }, [purchases, currentUser?.id]);
+  useEffect(() => { saveUserLiked(liked, currentUser?.id); }, [liked, currentUser?.id]);
+  useEffect(() => { saveUserPurchases(purchases, currentUser?.id); }, [purchases, currentUser?.id]);
+
 
   const { t } = useLocale();
 
@@ -116,7 +117,7 @@ function Products() {
       sourceId: newPurchase.id,
       product,
       price: product.price,
-      status: "Yetkazildi",
+      status: "Yetkazilmoqda",
       comment: `Mijoz ${currentUser?.displayName || currentUser?.username || "user"} mahsulot sotib oldi.`,
     });
     setJustBought(product.id);
