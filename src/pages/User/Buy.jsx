@@ -39,6 +39,30 @@ const WHEEL_SEGMENTS = [
   { label: "STICKER", color: "#fb7185" },
 ];
 
+function formatPrice(value) {
+  const amount = Number(value);
+  return new Intl.NumberFormat("uz-UZ").format(Number.isFinite(amount) ? amount : 0);
+}
+
+function formatDate(value) {
+  const date = new Date(value);
+  if (!value || Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("uz-UZ", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function daysUntil(value) {
+  const deliveryDate = new Date(value);
+  if (!value || Number.isNaN(deliveryDate.getTime())) return 0;
+  deliveryDate.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.ceil((deliveryDate.getTime() - today.getTime()) / 86400000);
+}
+
 function Buy() {
   const currentUser = getSessionUser();
   const [purchases, setPurchases] = useState(() => getUserPurchases(currentUser?.id));
@@ -244,6 +268,16 @@ function Buy() {
   const activeCount = purchases.filter((p) => p.status === "Yetkazilmoqda").length;
   const deliveredCount = purchases.filter((p) => p.status === "Yetkazildi").length;
   const cancelledCount = purchases.filter((p) => p.status === "Bekor qilindi").length;
+  const subtotal = useMemo(
+    () => purchases.reduce(
+      (sum, purchase) => sum + (purchase.status === "Bekor qilindi" ? 0 : Number(purchase.price) || 0),
+      0
+    ),
+    [purchases]
+  );
+  const discountRate = PROMO_CODES[appliedPromo]?.discount || 0;
+  const shippingCost = 0;
+  const total = Math.max(0, Math.round(subtotal * (1 - discountRate))) + shippingCost;
 
   return (
     <div className="orders-page">
