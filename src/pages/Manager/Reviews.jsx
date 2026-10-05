@@ -80,7 +80,7 @@ function Reviews() {
       <div className="products-header">
         <div>
           <h1>{t("reviews_title")} 💬</h1>
-          <p>Mijozlarning fikr-mulohazalarini shu yerdan kuzatib boring.</p>
+          <p>{t("customer_reviews")}</p>
         </div>
       </div>
 
@@ -88,7 +88,7 @@ function Reviews() {
         <div className="stat-card purple">
           <div className="stat-icon">⭐</div>
           <div>
-            <p>O'rtacha reyting</p>
+            <p>{t("average_rating")}</p>
             <h2>{avgRating}</h2>
           </div>
         </div>
@@ -96,7 +96,7 @@ function Reviews() {
         <div className="stat-card green">
           <div className="stat-icon">😊</div>
           <div>
-            <p>Ijobiy izohlar</p>
+            <p>{t("positive_reviews")}</p>
             <h2>{highCount}</h2>
           </div>
         </div>
@@ -104,7 +104,7 @@ function Reviews() {
         <div className="stat-card orange">
           <div className="stat-icon">😞</div>
           <div>
-            <p>Salbiy izohlar</p>
+            <p>{t("negative_reviews")}</p>
             <h2>{lowCount}</h2>
           </div>
         </div>
@@ -113,14 +113,14 @@ function Reviews() {
       <div className="products-toolbar">
         <input
           type="text"
-          placeholder="🔍 Mijoz yoki mahsulot bo'yicha qidirish..."
+          placeholder={`🔍 ${t("search_customer_product")}`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select value={ratingFilter} onChange={(e) => setRatingFilter(e.target.value)}>
-          <option value="all">Barchasi</option>
-          <option value="high">Ijobiy (4-5 ★)</option>
-          <option value="low">Salbiy (1-2 ★)</option>
+          <option value="all">{t("all")}</option>
+          <option value="high">{t("positive")} (4-5 ★)</option>
+          <option value="low">{t("negative")} (1-2 ★)</option>
         </select>
       </div>
 
@@ -142,7 +142,7 @@ function Reviews() {
         {filtered.length === 0 && (
           <div className="no-products">
             <h2>😔 {t("review_not_found")}</h2>
-            <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
+            <p>{t("search_filter_hint")}</p>
           </div>
         )}
       </div>

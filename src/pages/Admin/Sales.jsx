@@ -23,7 +23,7 @@ function getRealSales() {
 }
 
 function Sales() {
-  const { t } = useLocale();
+  const { t, lang } = useLocale();
   const [sales, setSales] = useState(() => getRealSales());
   const [search, setSearch] = useState("");
   const [satisfactionFilter, setSatisfactionFilter] = useState("all");
@@ -44,10 +44,11 @@ function Sales() {
     localStorage.setItem("nova_sales_v1", JSON.stringify(sales));
   }, [sales]);
 
-  const formatPrice = (price) => new Intl.NumberFormat("uz-UZ").format(price);
+  const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
+  const formatPrice = (price) => new Intl.NumberFormat(numberLocale).format(price);
 
   const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("uz-UZ", {
+    new Date(dateStr).toLocaleDateString(numberLocale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -119,7 +120,7 @@ function Sales() {
       <div className="products-header">
         <div>
           <h1>{t("sales_title")} 💰</h1>
-          <p>Haqiqiy xaridorlar va amalga oshirilgan savdolar hisoboti.</p>
+          <p>{t("sales_report_subtitle")}</p>
         </div>
       </div>
 
@@ -127,16 +128,16 @@ function Sales() {
         <div className="stat-card green">
           <div className="stat-icon">💵</div>
           <div>
-            <p>Jami tushum</p>
+            <p>{t("revenue")}</p>
             <h2>{formatPrice(totalSum)}</h2>
-            <span>so'm</span>
+            <span>{t("currency_label")}</span>
           </div>
         </div>
 
         <div className="stat-card purple">
           <div className="stat-icon">🛍️</div>
           <div>
-            <p>Jami savdolar soni</p>
+            <p>{t("total_sales_count")}</p>
             <h2>{sales.length}</h2>
           </div>
         </div>
@@ -144,7 +145,7 @@ function Sales() {
         <div className="stat-card blue">
           <div className="stat-icon">😊</div>
           <div>
-            <p>Mamnun mijozlar</p>
+            <p>{t("satisfied_customers")}</p>
             <h2>{satisfiedCount}</h2>
             <span>({satisfactionRate}%)</span>
           </div>
@@ -153,7 +154,7 @@ function Sales() {
         <div className="stat-card red">
           <div className="stat-icon">😞</div>
           <div>
-            <p>Norozi mijozlar</p>
+            <p>{t("dissatisfied_customers")}</p>
             <h2>{dissatisfiedCount}</h2>
           </div>
         </div>
@@ -162,7 +163,7 @@ function Sales() {
       <div className="products-toolbar">
         <input
           type="text"
-          placeholder="🔍 Mijoz, telefon yoki telefon modeli bo'yicha qidirish..."
+          placeholder={`🔍 ${t("search_orders")}`}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
@@ -171,10 +172,10 @@ function Sales() {
           value={satisfactionFilter}
           onChange={(event) => setSatisfactionFilter(event.target.value)}
         >
-          <option value="all">Barcha holatlar</option>
+          <option value="all">{t("all_statuses")}</option>
           {SATISFACTION_LIST.map((item) => (
             <option key={item} value={item}>
-              {item}
+              {item === "Mamnun" ? t("satisfied") : item === "Neytral" ? t("neutral") : t("unsatisfied")}
             </option>
           ))}
         </select>
@@ -182,13 +183,13 @@ function Sales() {
 
       <div className="orders-list sales-list">
         <div className="order-row sale-row order-row-head">
-          <span>Mijoz</span>
-          <span>Mahsulot</span>
-          <span>Summasi</span>
-          <span>Sanasi</span>
-          <span>Holati</span>
-          <span>Mamnunlik</span>
-          <span>Amallar</span>
+          <span>{t("customer")}</span>
+          <span>{t("product")}</span>
+          <span>{t("subtotal")}</span>
+          <span>{t("date")}</span>
+          <span>{t("status")}</span>
+          <span>{t("satisfaction_level")}</span>
+          <span>{t("actions")}</span>
         </div>
 
         {filteredSales.map((sale) => (
@@ -203,7 +204,7 @@ function Sales() {
 
             <div className="order-product-cell">{sale.product}</div>
 
-            <div className="order-price-cell">{formatPrice(sale.price)} so'm</div>
+            <div className="order-price-cell">{formatPrice(sale.price)} {t("currency_label")}</div>
 
             <div className="order-date-cell">{formatDate(sale.date)}</div>
 
@@ -211,7 +212,7 @@ function Sales() {
 
             <div className="satisfaction-cell">
               <span className={`status-badge ${satisfactionClass(sale.satisfaction)}`}>
-                {satisfactionEmoji(sale.satisfaction)} {sale.satisfaction}
+                {satisfactionEmoji(sale.satisfaction)} {sale.satisfaction === "Mamnun" ? t("satisfied") : sale.satisfaction === "Neytral" ? t("neutral") : t("unsatisfied")}
               </span>
               <span className="star-rating" title={sale.comment}>
                 {renderStars(sale.rating)}
@@ -225,7 +226,7 @@ function Sales() {
               >
                 {SATISFACTION_LIST.map((item) => (
                   <option key={item} value={item}>
-                    {item}
+                    {item === "Mamnun" ? t("satisfied") : item === "Neytral" ? t("neutral") : t("unsatisfied")}
                   </option>
                 ))}
               </select>
@@ -233,7 +234,7 @@ function Sales() {
 
             <div className="order-actions-cell">
               <button className="delete-button" onClick={() => handleDelete(sale.id)}>
-                🗑️ O'chirish
+                🗑️ {t("delete")}
               </button>
             </div>
           </div>

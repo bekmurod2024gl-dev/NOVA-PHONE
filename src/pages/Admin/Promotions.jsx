@@ -61,7 +61,7 @@ const initialFormState = {
 };
 
 function Promotions() {
-  const { t } = useLocale();
+  const { t, lang } = useLocale();
   const [promotions, setPromotions] = useState(() => {
     const saved = localStorage.getItem("nova_promotions_v1");
     return saved ? JSON.parse(saved) : defaultPromotions;
@@ -77,8 +77,9 @@ function Promotions() {
     localStorage.setItem("nova_promotions_v1", JSON.stringify(promotions));
   }, [promotions]);
 
+  const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
   const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("uz-UZ", {
+    new Date(dateStr).toLocaleDateString(numberLocale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -87,7 +88,14 @@ function Promotions() {
   const formatValue = (promo) =>
     promo.type === "Foizli"
       ? `${promo.value}%`
-      : `${new Intl.NumberFormat("uz-UZ").format(promo.value)} so'm`;
+      : `${new Intl.NumberFormat(numberLocale).format(promo.value)} ${t("currency_label")}`;
+
+  const statusLabel = (status) => ({
+    Faol: t("active_status"),
+    Rejalashtirilgan: t("scheduled"),
+    "Muddati o'tgan": t("expired_status"),
+    Tugagan: t("ended"),
+  }[status] || status);
 
   const getStatus = (promo) => {
     const today = new Date().toISOString().slice(0, 10);
@@ -175,7 +183,7 @@ function Promotions() {
   };
 
   const handleDelete = (id) => {
-    if (!window.confirm("Bu aksiyani o'chirmoqchimisiz?")) return;
+    if (!window.confirm(t("confirm_delete_promotion"))) return;
     setPromotions((prev) => prev.filter((promo) => promo.id !== id));
   };
 
@@ -200,10 +208,10 @@ function Promotions() {
       <div className="products-header">
         <div>
           <h1>{t("promotions_title")} 🎁</h1>
-          <p>Chegirmalar va promo kodlarni shu yerdan boshqarasiz.</p>
+          <p>{t("promotion_subtitle")}</p>
         </div>
         <button className="add-product-button" onClick={() => setShowModal(true)}>
-          + Yangi aksiya
+          + {t("add_promotion")}
         </button>
       </div>
 
@@ -211,7 +219,7 @@ function Promotions() {
         <div className="stat-card purple">
           <div className="stat-icon">🎁</div>
           <div>
-            <p>Jami aksiyalar</p>
+            <p>{t("total_promotions")}</p>
             <h2>{totalPromotions}</h2>
           </div>
         </div>
@@ -219,7 +227,7 @@ function Promotions() {
         <div className="stat-card green">
           <div className="stat-icon">🔥</div>
           <div>
-            <p>Faol aksiyalar</p>
+            <p>{t("active_promotions")}</p>
             <h2>{activePromotions}</h2>
           </div>
         </div>
@@ -227,7 +235,7 @@ function Promotions() {
         <div className="stat-card blue">
           <div className="stat-icon">🎟️</div>
           <div>
-            <p>Jami ishlatilgan</p>
+            <p>{t("total_uses")}</p>
             <h2>{totalUsage}</h2>
           </div>
         </div>
@@ -235,7 +243,7 @@ function Promotions() {
         <div className="stat-card orange">
           <div className="stat-icon">⌛</div>
           <div>
-            <p>Muddati o'tgan</p>
+            <p>{t("expired_promotions")}</p>
             <h2>{expiredPromotions}</h2>
           </div>
         </div>
@@ -244,29 +252,29 @@ function Promotions() {
       <div className="products-toolbar">
         <input
           type="text"
-          placeholder="🔍 Nomi yoki promo kod bo'yicha qidirish..."
+          placeholder={`🔍 ${t("search_promotions")}`}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
 
         <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-          <option value="all">Barcha holatlar</option>
-          <option value="Faol">Faol</option>
-          <option value="Rejalashtirilgan">Rejalashtirilgan</option>
-          <option value="Muddati o'tgan">Muddati o'tgan</option>
-          <option value="Tugagan">Tugagan</option>
+          <option value="all">{t("all_statuses")}</option>
+          <option value="Faol">{t("active_status")}</option>
+          <option value="Rejalashtirilgan">{t("scheduled")}</option>
+          <option value="Muddati o'tgan">{t("expired_status")}</option>
+          <option value="Tugagan">{t("ended")}</option>
         </select>
       </div>
 
       <div className="orders-list">
         <div className="order-row promo-row order-row-head">
-          <span>Aksiya</span>
-          <span>Promo kod</span>
-          <span>Chegirma</span>
-          <span>Muddati</span>
-          <span>Ishlatilgan</span>
-          <span>Holati</span>
-          <span>Amallar</span>
+          <span>{t("promotion")}</span>
+          <span>{t("promo_code")}</span>
+          <span>{t("discount")}</span>
+          <span>{t("expires")}</span>
+          <span>{t("used")}</span>
+          <span>{t("status")}</span>
+          <span>{t("actions")}</span>
         </div>
 
         {filteredPromotions.map((promo) => {
@@ -290,7 +298,7 @@ function Promotions() {
               </span>
 
               <span>
-                <span className={`status-badge ${statusClass(status)}`}>{status}</span>
+                <span className={`status-badge ${statusClass(status)}`}>{statusLabel(status)}</span>
               </span>
 
               <div className="admin-actions">
@@ -308,7 +316,7 @@ function Promotions() {
         {filteredPromotions.length === 0 && (
           <div className="no-products">
             <h2>😔 {t("no_promotion")}</h2>
-            <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
+            <p>{t("search_filter_hint")}</p>
           </div>
         )}
       </div>
@@ -317,7 +325,7 @@ function Promotions() {
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingId ? "Aksiyani tahrirlash" : "Yangi aksiya qo'shish"}</h2>
+              <h2>{editingId ? t("edit") : t("add_promotion")}</h2>
               <button onClick={handleCloseModal}>✕</button>
             </div>
 
@@ -325,7 +333,7 @@ function Promotions() {
               <input
                 name="title"
                 type="text"
-                placeholder="Aksiya nomi"
+                placeholder={t("promotion_name")}
                 value={formFields.title}
                 onChange={handleInputChange}
                 required
@@ -334,7 +342,7 @@ function Promotions() {
               <input
                 name="code"
                 type="text"
-                placeholder="Promo kod (masalan: SUMMER25)"
+                placeholder={t("promo_code_example")}
                 value={formFields.code}
                 onChange={handleInputChange}
                 required
@@ -343,7 +351,7 @@ function Promotions() {
               <select name="type" value={formFields.type} onChange={handleInputChange} required>
                 {DISCOUNT_TYPES.map((type) => (
                   <option key={type} value={type}>
-                    {type}
+                    {type === "Foizli" ? t("percentage_discount") : t("fixed_discount")}
                   </option>
                 ))}
               </select>
@@ -351,7 +359,7 @@ function Promotions() {
               <input
                 name="value"
                 type="number"
-                placeholder={formFields.type === "Foizli" ? "Chegirma foizi" : "Chegirma summasi"}
+                placeholder={formFields.type === "Foizli" ? t("discount_percent") : t("discount_amount")}
                 value={formFields.value}
                 onChange={handleInputChange}
                 required
@@ -376,13 +384,13 @@ function Promotions() {
               <input
                 name="usageLimit"
                 type="number"
-                placeholder="Foydalanish limiti"
+                placeholder={t("usage_limit")}
                 value={formFields.usageLimit}
                 onChange={handleInputChange}
                 required
               />
 
-              <button type="submit">{editingId ? "💾 Saqlash" : "➕ Aksiya qo'shish"}</button>
+              <button type="submit">{editingId ? `💾 ${t("save")}` : `➕ ${t("add_promotion_action")}`}</button>
             </form>
           </div>
         </div>

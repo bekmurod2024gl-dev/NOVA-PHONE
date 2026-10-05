@@ -101,12 +101,18 @@ function Approvals() {
     }
   };
 
+  const statusLabel = (status) => ({
+    Kutilmoqda: t("pending_status"),
+    Tasdiqlangan: t("approved_status"),
+    "Rad etilgan": t("rejected_status"),
+  }[status] || status);
+
   return (
     <div className="orders-page">
       <div className="products-header">
         <div>
           <h1>{t("approvals_title")} 🔔</h1>
-          <p>Buyurtmalarni ko'rib chiqing, tasdiqlang yoki rad eting.</p>
+          <p>{t("pending_approvals")}</p>
         </div>
       </div>
 
@@ -114,7 +120,7 @@ function Approvals() {
         <div className="stat-card orange">
           <div className="stat-icon">⏳</div>
           <div>
-            <p>Kutilmoqda</p>
+            <p>{t("pending_status")}</p>
             <h2>{pendingCount}</h2>
           </div>
         </div>
@@ -122,7 +128,7 @@ function Approvals() {
         <div className="stat-card green">
           <div className="stat-icon">✅</div>
           <div>
-            <p>Tasdiqlangan</p>
+            <p>{t("approved_status")}</p>
             <h2>{approvedCount}</h2>
           </div>
         </div>
@@ -130,7 +136,7 @@ function Approvals() {
         <div className="stat-card blue">
           <div className="stat-icon">✕</div>
           <div>
-            <p>Rad etilgan</p>
+            <p>{t("rejected_status")}</p>
             <h2>{rejectedCount}</h2>
           </div>
         </div>
@@ -139,26 +145,26 @@ function Approvals() {
       <div className="products-toolbar">
         <input
           type="text"
-          placeholder="🔍 Mijoz yoki mahsulot bo'yicha qidirish..."
+          placeholder={`🔍 ${t("search_customer_product")}`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="all">Barchasi</option>
-          <option value="Kutilmoqda">Kutilmoqda</option>
-          <option value="Tasdiqlangan">Tasdiqlangan</option>
-          <option value="Rad etilgan">Rad etilgan</option>
+          <option value="all">{t("all")}</option>
+          <option value="Kutilmoqda">{t("pending_status")}</option>
+          <option value="Tasdiqlangan">{t("approved_status")}</option>
+          <option value="Rad etilgan">{t("rejected_status")}</option>
         </select>
       </div>
 
       <div className="orders-list">
         <div className="order-row order-row-head">
-          <span>Mijoz</span>
-          <span>Mahsulot</span>
-          <span>Narxi</span>
-          <span>Vaqti</span>
-          <span>Holati</span>
-          <span>Amallar</span>
+          <span>{t("customer")}</span>
+          <span>{t("product")}</span>
+          <span>{t("price")}</span>
+          <span>{t("order_date")}</span>
+          <span>{t("status")}</span>
+          <span>{t("actions")}</span>
         </div>
 
         {filtered.map((order) => (
@@ -176,7 +182,7 @@ function Approvals() {
             <div className="order-date-cell">{order.time}</div>
 
             <div>
-              <span className={`status-badge ${statusClass(order.status)}`}>{order.status}</span>
+              <span className={`status-badge ${statusClass(order.status)}`}>{statusLabel(order.status)}</span>
             </div>
 
             <div className="order-actions-cell">
@@ -190,7 +196,7 @@ function Approvals() {
                   </button>
                 </div>
               ) : (
-                <span style={{ color: "#64748b", fontSize: "12px" }}>Hal qilingan</span>
+                <span style={{ color: "#64748b", fontSize: "12px" }}>{t("resolved")}</span>
               )}
             </div>
           </div>
@@ -199,7 +205,7 @@ function Approvals() {
         {filtered.length === 0 && (
           <div className="no-products">
             <h2>😔 {t("order_not_found")}</h2>
-            <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
+            <p>{t("search_filter_hint")}</p>
           </div>
         )}
       </div>

@@ -106,7 +106,7 @@ function Attendance() {
       <div className="products-header">
         <div>
           <h1>{t("attendance_title")} 🧑‍💼</h1>
-          <p>Bugungi kelish-ketish va faollikni shu yerdan kuzating.</p>
+          <p>{t("attendance_today_subtitle")}</p>
         </div>
       </div>
 
@@ -114,7 +114,7 @@ function Attendance() {
         <div className="stat-card green">
           <div className="stat-icon">✅</div>
           <div>
-            <p>Keldi</p>
+            <p>{t("present")}</p>
             <h2>{presentCount}</h2>
           </div>
         </div>
@@ -122,7 +122,7 @@ function Attendance() {
         <div className="stat-card orange">
           <div className="stat-icon">🚫</div>
           <div>
-            <p>Kelmadi</p>
+            <p>{t("absent")}</p>
             <h2>{absentCount}</h2>
           </div>
         </div>
@@ -130,7 +130,7 @@ function Attendance() {
         <div className="stat-card blue">
           <div className="stat-icon">🔥</div>
           <div>
-            <p>Faol xodimlar</p>
+            <p>{t("active_employees")}</p>
             <h2>{activeCount}</h2>
           </div>
         </div>
@@ -139,25 +139,25 @@ function Attendance() {
       <div className="products-toolbar">
         <input
           type="text"
-          placeholder="🔍 Xodim ismi bo'yicha qidirish..."
+          placeholder={`🔍 ${t("search_worker")}`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-          <option value="all">Barchasi</option>
-          <option value="present">Keldi</option>
-          <option value="absent">Kelmadi</option>
+          <option value="all">{t("all")}</option>
+          <option value="present">{t("present")}</option>
+          <option value="absent">{t("absent")}</option>
         </select>
       </div>
 
       <div className="orders-list">
         <div className="order-row employee-row order-row-head">
-          <span>Xodim</span>
-          <span>Kelgan vaqti</span>
-          <span>Ketgan vaqti</span>
-          <span>Vazifalar</span>
-          <span>Holati</span>
-          <span>Amallar</span>
+          <span>{t("employee")}</span>
+          <span>{t("check_in")}</span>
+          <span>{t("check_out")}</span>
+          <span>{t("tasks")}</span>
+          <span>{t("status")}</span>
+          <span>{t("actions")}</span>
         </div>
 
         {filtered.map((person) => (
@@ -184,7 +184,7 @@ function Attendance() {
                     : "satisfaction-sad"
                 }`}
               >
-                {person.present ? `● ${person.activity}` : "✕ Kelmadi"}
+                {person.present ? `● ${person.activity}` : `✕ ${t("absent")}`}
               </span>
             </div>
 
@@ -193,7 +193,7 @@ function Attendance() {
                 className={person.present ? "delete-button" : "edit-button"}
                 onClick={() => togglePresent(person.id)}
               >
-                {person.present ? "Kelmadi deb belgilash" : "Keldi deb belgilash"}
+                {person.present ? t("mark_absent") : t("mark_present")}
               </button>
             </div>
           </div>
@@ -202,7 +202,7 @@ function Attendance() {
         {filtered.length === 0 && (
           <div className="no-products">
             <h2>😔 {t("worker_not_found")}</h2>
-            <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
+            <p>{t("search_filter_hint")}</p>
           </div>
         )}
       </div>

@@ -5,7 +5,7 @@ import { useLocale } from "../../context/LocaleContext";
 
 export default function EmployeeDashboard() {
   const { t, lang } = useLocale();
-  const [currentUser, setCurrentUser] = useState(() => getSessionUser());
+  const [currentUser] = useState(() => getSessionUser());
   const [shiftActive, setShiftActive] = useState(() => {
     return localStorage.getItem("nova_employee_shift") === "true";
   });
@@ -71,7 +71,7 @@ export default function EmployeeDashboard() {
       <div className="products-header">
         <div>
           <h1>{t("employee_dashboard_title")} 🧑‍💼</h1>
-          <p>Xush kelibsiz, <strong>{employeeName}</strong>! Sizning shaxsiy ish kabinetingiz va ko'rsatkichlaringiz.</p>
+          <p>{t("welcome_employee")} <strong>{employeeName}</strong>! {t("employee_dashboard_subtitle")}</p>
         </div>
         <div>
           <button
@@ -87,7 +87,7 @@ export default function EmployeeDashboard() {
             }}
             onClick={handleToggleShift}
           >
-            {shiftActive ? "🟢 Smena faol (Ish vaqti)" : "🟡 Smenani boshlash"}
+            {shiftActive ? `🟢 ${t("shift_active")}` : `🟡 ${t("start_shift")}`}
           </button>
         </div>
       </div>
@@ -97,36 +97,36 @@ export default function EmployeeDashboard() {
         <div className="stat-card green">
           <div className="stat-icon">💵</div>
           <div>
-            <p>Asosiy oylik maosh</p>
+            <p>{t("base_salary")}</p>
             <h2>{formatPrice(salary)}</h2>
-            <span>so'm / oy</span>
+            <span>{t("per_month")}</span>
           </div>
         </div>
 
         <div className="stat-card purple">
           <div className="stat-icon">🎁</div>
           <div>
-            <p>Oylik bonus / KPI</p>
+            <p>{t("monthly_bonus")}</p>
             <h2>+{formatPrice(bonus)}</h2>
-            <span>so'm</span>
+            <span>{t("currency_label")}</span>
           </div>
         </div>
 
         <div className="stat-card blue">
           <div className="stat-icon">💳</div>
           <div>
-            <p>Jami hisoblangan to'lov</p>
+            <p>{t("calculated_pay")}</p>
             <h2>{formatPrice(totalPay)}</h2>
-            <span>so'm</span>
+            <span>{t("currency_label")}</span>
           </div>
         </div>
 
         <div className="stat-card orange">
           <div className="stat-icon">⏱️</div>
           <div>
-            <p>Ishlangan kunlar</p>
+            <p>{t("days_worked")}</p>
             <h2>22 kun</h2>
-            <span>Bu oyda</span>
+            <span>{t("this_month")}</span>
           </div>
         </div>
       </div>
@@ -135,7 +135,7 @@ export default function EmployeeDashboard() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
         {/* RAQAMLI GUVIHNOMA / PROFIL */}
         <div className="settings-card" style={{ margin: 0 }}>
-          <h3 className="settings-card-title">🪪 Raqamli Xodim Guvohnomasi</h3>
+          <h3 className="settings-card-title">🪪 {t("digital_id")}</h3>
           
           <div style={{
             background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.1) 100%)",
@@ -177,11 +177,11 @@ export default function EmployeeDashboard() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "12px" }}>
-              <div><strong>ID raqami:</strong> #{currentUser?.id ? `EMP-${String(currentUser.id).slice(-4)}` : "EMP-1042"}</div>
-              <div><strong>Telefon:</strong> {phone}</div>
-              <div><strong>Ish joyi:</strong> NOVA-PHONE Asaka / Bosh do'kon</div>
-              <div><strong>Ishga kirgan sana:</strong> {hiredDate}</div>
-              <div><strong>Rahbar:</strong> Bobomurod jumaboyev (Bosh administrator)</div>
+              <div><strong>{t("employee_id")}:</strong> #{currentUser?.id ? `EMP-${String(currentUser.id).slice(-4)}` : "EMP-1042"}</div>
+              <div><strong>{t("phone")}:</strong> {phone}</div>
+              <div><strong>{t("workplace")}:</strong> NOVA-PHONE Asaka / {t("nav_dashboard")}</div>
+              <div><strong>{t("joined")}:</strong> {hiredDate}</div>
+              <div><strong>{t("supervisor")}:</strong> Bobomurod jumaboyev ({t("admin_role")})</div>
             </div>
 
             <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
@@ -191,14 +191,14 @@ export default function EmployeeDashboard() {
                 style={{ flex: 1, padding: "8px 12px", fontSize: "12px", borderRadius: "8px", background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer" }}
                 onClick={() => setVacationModal(true)}
               >
-                🌴 Ta'til so'rash
+                🌴 {t("ask_leave")}
               </button>
               <Link
                 to="/user/products"
                 className="action-button"
                 style={{ flex: 1, padding: "8px 12px", fontSize: "12px", borderRadius: "8px", background: "#6366f1", color: "#fff", textAlign: "center", textDecoration: "none", fontWeight: "600" }}
               >
-                📱 Mahsulotlar
+                📱 {t("nav_products_user")}
               </Link>
             </div>
           </div>
@@ -207,9 +207,9 @@ export default function EmployeeDashboard() {
         {/* KUNLIK TOPSHIRIQLAR VA VAZIFALAR */}
         <div className="settings-card" style={{ margin: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h3 className="settings-card-title" style={{ margin: 0 }}>📋 Kunlik Vazifalar</h3>
+            <h3 className="settings-card-title" style={{ margin: 0 }}>📋 {t("daily_tasks")}</h3>
             <span style={{ fontSize: "12px", color: "var(--muted)" }}>
-              {tasks.filter((t) => t.done).length} / {tasks.length} bajarildi
+              {tasks.filter((task) => task.done).length} / {tasks.length} {t("completed")}
             </span>
           </div>
 
@@ -236,14 +236,14 @@ export default function EmployeeDashboard() {
                   textDecoration: task.done ? "line-through" : "none",
                   opacity: task.done ? 0.7 : 1
                 }}>
-                  {task.text}
+                  {t(`employee_task_${task.id}`)}
                 </span>
               </div>
             ))}
           </div>
 
           <div style={{ marginTop: "18px", padding: "12px", background: "rgba(99,102,241,0.08)", borderRadius: "10px", fontSize: "12.5px" }}>
-            💡 <strong>Eslatma:</strong> Barcha topshiriqlarni vaqtida bajarish oylik bonus va mukofot miqdoriga to'g'ridan-to'g'ri ijobiy ta'sir qiladi.
+            💡 <strong>{t("reminder")}:</strong> {t("task_reminder")}
           </div>
         </div>
       </div>
@@ -259,32 +259,32 @@ export default function EmployeeDashboard() {
             {vacationSent ? (
               <div style={{ padding: "30px", textAlign: "center" }}>
                 <span style={{ fontSize: "40px" }}>✅</span>
-                <h3>Arizangiz qabul qilindi!</h3>
-                <p>Admin {employeeName} nomidan ta'til arizasini ko'rib chiqadi.</p>
+                <h3>{t("vacation_accepted")}</h3>
+                <p>{t("vacation_review").replace("employee", employeeName)}</p>
               </div>
             ) : (
               <form onSubmit={handleSendVacation} className="modal-form">
                 <div className="form-group">
-                  <label>Ta'til boshlanish sanasi</label>
+                  <label>{t("leave_start_date")}</label>
                   <input type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
                 </div>
                 <div className="form-group">
-                  <label>Ta'til davomiyligi (kun)</label>
+                  <label>{t("leave_duration")}</label>
                   <input type="number" min="1" max="30" defaultValue="7" required />
                 </div>
                 <div className="form-group">
-                  <label>Sababi yoki izoh</label>
+                  <label>{t("reason_note")}</label>
                   <textarea
                     rows="3"
-                    placeholder="Masalan: Yillik mehnat ta'tili yoki oilaviy sabab..."
+                    placeholder={t("leave_note_placeholder")}
                     value={vacationNote}
                     onChange={(e) => setVacationNote(e.target.value)}
                     required
                   ></textarea>
                 </div>
                 <div className="modal-actions">
-                  <button type="button" className="cancel-button" onClick={() => setVacationModal(false)}>Bekor qilish</button>
-                  <button type="submit" className="save-button">Arizani yuborish</button>
+                  <button type="button" className="cancel-button" onClick={() => setVacationModal(false)}>{t("form_cancel")}</button>
+                  <button type="submit" className="save-button">{t("send_application")}</button>
                 </div>
               </form>
             )}

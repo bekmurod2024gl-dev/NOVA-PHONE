@@ -73,18 +73,6 @@ function WorkerPanel() {
   const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
   const formatSalary = (value) => new Intl.NumberFormat(numberLocale).format(value);
 
-  const formatDate = (dateStr) => {
-    try {
-      return new Date(dateStr).toLocaleDateString(numberLocale, {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
   const statusClass = (status) => {
     switch (status) {
       case "Ishlamoqda":
@@ -101,7 +89,7 @@ function WorkerPanel() {
       <div className="products-header">
         <div>
           <h1>{t("worker_stats")} 👷‍♂️</h1>
-          <p>Haqiqiy xodimlar maoshi, davomati va oylik ko'rsatkichlari nazorati.</p>
+          <p>{t("employees_salary_attendance")}</p>
         </div>
       </div>
 
@@ -109,39 +97,39 @@ function WorkerPanel() {
         <div className="stat-card green">
           <div className="stat-icon">👷‍♂️</div>
           <div>
-            <p>Faol ishchilar</p>
+            <p>{t("active_workers")}</p>
             <h2>{activeWorkers} ta</h2>
-            <span>Jami: {workers.length}</span>
+            <span>{t("total_records")}: {workers.length}</span>
           </div>
         </div>
 
         <div className="stat-card purple">
           <div className="stat-icon">💰</div>
           <div>
-            <p>Jami oylik fondi</p>
+            <p>{t("total_payroll")}</p>
             <h2>{formatSalary(totalSalary)}</h2>
-            <span>so'm</span>
+            <span>{t("currency_label")}</span>
           </div>
         </div>
 
         <div className="stat-card blue">
           <div className="stat-icon">🎁</div>
           <div>
-            <p>Oylik bonus fondi</p>
+            <p>{t("monthly_bonus_fund")}</p>
             <h2>{formatSalary(totalBonus)}</h2>
-            <span>so'm</span>
+            <span>{t("currency_label")}</span>
           </div>
         </div>
       </div>
 
       <div className="orders-list">
         <div className="order-row employee-row order-row-head">
-          <span>Xodim</span>
-          <span>Lavozim</span>
-          <span>Oylik + Bonus</span>
-          <span>Smena / Davomat</span>
-          <span>Holati</span>
-          <span>Samaradorlik</span>
+          <span>{t("employee")}</span>
+          <span>{t("position")}</span>
+          <span>{t("salary_bonus")}</span>
+          <span>{t("shift_attendance")}</span>
+          <span>{t("status")}</span>
+          <span>{t("performance")}</span>
         </div>
 
         {workers.map((worker) => (
@@ -157,13 +145,13 @@ function WorkerPanel() {
             <div className="order-product-cell">{worker.position}</div>
 
             <div className="order-price-cell">
-              <strong>{formatSalary(worker.salary)} so'm</strong>
-              <div style={{ fontSize: "11px", color: "#10b981" }}>+{formatSalary(worker.bonus)} bonus</div>
+              <strong>{formatSalary(worker.salary)} {t("currency_label")}</strong>
+              <div style={{ fontSize: "11px", color: "#10b981" }}>+{formatSalary(worker.bonus)} {t("bonus")}</div>
             </div>
 
             <div className="order-date-cell">
               <div>{worker.shift}</div>
-              <small style={{ color: "#38bdf8" }}>Davomat: {worker.attendance}</small>
+              <small style={{ color: "#38bdf8" }}>{t("attendance")}: {worker.attendance}</small>
             </div>
 
             <div className="order-status-cell">
@@ -181,7 +169,7 @@ function WorkerPanel() {
         {workers.length === 0 && (
           <div className="no-products" style={{ padding: "40px", textAlign: "center" }}>
             <h2>👷‍♂️ {t("workers_empty")}</h2>
-            <p>Admin panel orqali ariza topshirgan yangi ishchilar qabul qilinganda shu yerda ko'rinadi.</p>
+            <p>{t("new_workers_hint")}</p>
           </div>
         )}
       </div>

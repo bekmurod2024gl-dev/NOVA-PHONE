@@ -77,10 +77,10 @@ function DamagedItems() {
       <div className="products-header">
         <div>
           <h1>{t("damaged_title")} 🔧</h1>
-          <p>Zararlangan mahsulotlar va yo'qotilgan summani shu yerdan kuzating.</p>
+          <p>{t("damage_subtitle")}</p>
         </div>
         <button className="add-product-button" onClick={() => setShowModal(true)}>
-          + Yangi yozuv
+          + {t("new_record")}
         </button>
       </div>
 
@@ -88,7 +88,7 @@ function DamagedItems() {
         <div className="stat-card orange">
           <div className="stat-icon">🔧</div>
           <div>
-            <p>Jami yozuvlar</p>
+            <p>{t("total_records")}</p>
             <h2>{items.length}</h2>
           </div>
         </div>
@@ -96,9 +96,9 @@ function DamagedItems() {
         <div className="stat-card blue">
           <div className="stat-icon">📉</div>
           <div>
-            <p>Jami zarar</p>
+            <p>{t("total_damage")}</p>
             <h2>{formatSum(totalLoss)}</h2>
-            <span>so'm</span>
+            <span>{t("currency_label")}</span>
           </div>
         </div>
       </div>
@@ -106,7 +106,7 @@ function DamagedItems() {
       <div className="products-toolbar">
         <input
           type="text"
-          placeholder="🔍 Mahsulot nomi bo'yicha qidirish..."
+          placeholder={`🔍 ${t("search_product")}`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -121,13 +121,13 @@ function DamagedItems() {
                 <p className="review-product">{item.reason}</p>
               </div>
               <span style={{ color: "#f87171", fontWeight: "bold", fontSize: "13px" }}>
-                -{formatSum(item.loss)} so'm
+                -{formatSum(item.loss)} {t("currency_label")}
               </span>
             </div>
             <span className="review-time">{formatDate(item.date)}</span>
             <div style={{ marginTop: "10px" }}>
               <button className="delete-button" onClick={() => handleDelete(item.id)}>
-                🗑️ O'chirish
+                🗑️ {t("delete")}
               </button>
             </div>
           </div>
@@ -136,7 +136,7 @@ function DamagedItems() {
         {filtered.length === 0 && (
           <div className="no-products">
             <h2>😔 {t("no_damage_records")}</h2>
-            <p>Qidiruvni o'zgartirib ko'ring.</p>
+            <p>{t("search_filter_hint")}</p>
           </div>
         )}
       </div>
@@ -153,7 +153,7 @@ function DamagedItems() {
               <input
                 name="name"
                 type="text"
-                placeholder="Mahsulot nomi"
+                placeholder={t("product_name")}
                 value={formFields.name}
                 onChange={handleChange}
                 required
@@ -161,7 +161,7 @@ function DamagedItems() {
               <input
                 name="reason"
                 type="text"
-                placeholder="Sababi (masalan: tashishda singan)"
+                placeholder={t("damage_reason")}
                 value={formFields.reason}
                 onChange={handleChange}
                 required
@@ -169,7 +169,7 @@ function DamagedItems() {
               <input
                 name="loss"
                 type="number"
-                placeholder="Zarar summasi (so'm)"
+                placeholder={`${t("damage_amount")} (${t("currency_label")})`}
                 value={formFields.loss}
                 onChange={handleChange}
                 required
@@ -181,7 +181,7 @@ function DamagedItems() {
                 onChange={handleChange}
                 required
               />
-              <button type="submit">💾 Saqlash</button>
+              <button type="submit">💾 {t("save")}</button>
             </form>
           </div>
         </div>

@@ -69,7 +69,7 @@ const initialFormState = {
 };
 
 function Warehouse() {
-  const { t } = useLocale();
+  const { t, lang } = useLocale();
   const [stock, setStock] = useState(() => {
     const saved = localStorage.getItem("nova_warehouse_stock_v1");
     return saved ? JSON.parse(saved) : defaultStock;
@@ -93,8 +93,9 @@ function Warehouse() {
     localStorage.setItem("nova_warehouse_movements_v1", JSON.stringify(movements));
   }, [movements]);
 
+  const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
   const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("uz-UZ", {
+    new Date(dateStr).toLocaleDateString(numberLocale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -169,10 +170,10 @@ function Warehouse() {
       <div className="products-header">
         <div>
           <h1>{t("warehouse_title")} 🏬</h1>
-          <p>Mahsulotlar zaxirasi va kirim-chiqim tarixini shu yerdan boshqarasiz.</p>
+          <p>{t("warehouse_subtitle")}</p>
         </div>
         <button className="add-product-button" onClick={() => setShowModal(true)}>
-          + Kirim/Chiqim qo'shish
+          + {t("add_movement")}
         </button>
       </div>
 
@@ -180,7 +181,7 @@ function Warehouse() {
         <div className="stat-card purple">
           <div className="stat-icon">📦</div>
           <div>
-            <p>Mahsulot turlari</p>
+            <p>{t("product_types")}</p>
             <h2>{totalProducts}</h2>
           </div>
         </div>
@@ -188,7 +189,7 @@ function Warehouse() {
         <div className="stat-card orange">
           <div className="stat-icon">⚠️</div>
           <div>
-            <p>Kam qolgan mahsulotlar</p>
+            <p>{t("low_stock_products")}</p>
             <h2>{lowStockCount}</h2>
           </div>
         </div>
@@ -196,7 +197,7 @@ function Warehouse() {
         <div className="stat-card green">
           <div className="stat-icon">⬇️</div>
           <div>
-            <p>Jami kirim</p>
+            <p>{t("total_incoming")}</p>
             <h2>{totalIncoming}</h2>
           </div>
         </div>
@@ -204,7 +205,7 @@ function Warehouse() {
         <div className="stat-card blue">
           <div className="stat-icon">⬆️</div>
           <div>
-            <p>Jami chiqim</p>
+            <p>{t("total_outgoing")}</p>
             <h2>{totalOutgoing}</h2>
           </div>
         </div>
@@ -216,22 +217,22 @@ function Warehouse() {
 
         <div className="stock-table">
           <div className="stock-row stock-row-head">
-            <span>Mahsulot</span>
-            <span>Brend</span>
-            <span>Qolgan miqdor</span>
-            <span>Holati</span>
+            <span>{t("product")}</span>
+            <span>{t("brand_name")}</span>
+            <span>{t("remaining_quantity")}</span>
+            <span>{t("status")}</span>
           </div>
 
           {stock.map((item) => (
             <div className="stock-row" key={item.id}>
               <span>{item.name}</span>
               <span>{item.brand}</span>
-              <span>{item.quantity} ta</span>
+              <span>{item.quantity} {t("item_suffix")}</span>
               <span>
                 {item.quantity <= LOW_STOCK_THRESHOLD ? (
-                  <span className="status-badge satisfaction-sad">⚠️ Kam qoldi</span>
+                  <span className="status-badge satisfaction-sad">⚠️ {t("low_stock")}</span>
                 ) : (
-                  <span className="status-badge satisfaction-happy">✅ Yetarli</span>
+                  <span className="status-badge satisfaction-happy">✅ {t("sufficient_stock")}</span>
                 )}
               </span>
             </div>
@@ -246,16 +247,16 @@ function Warehouse() {
         <div className="products-toolbar">
           <input
             type="text"
-            placeholder="🔍 Mahsulot nomi bo'yicha qidirish..."
+            placeholder={`🔍 ${t("search_product")}`}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
 
           <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
-            <option value="all">Barchasi</option>
+            <option value="all">{t("all")}</option>
             {MOVEMENT_TYPES.map((type) => (
               <option key={type} value={type}>
-                {type}
+                {type === "Kirim" ? t("incoming") : t("outgoing")}
               </option>
             ))}
           </select>
@@ -263,11 +264,11 @@ function Warehouse() {
 
         <div className="orders-list">
           <div className="order-row movement-row order-row-head">
-            <span>Mahsulot</span>
-            <span>Turi</span>
-            <span>Miqdori</span>
-            <span>Sana</span>
-            <span>Izoh</span>
+            <span>{t("product")}</span>
+            <span>{t("movement_type")}</span>
+            <span>{t("quantity")}</span>
+            <span>{t("date")}</span>
+            <span>{t("note")}</span>
           </div>
 
           {filteredMovements.map((movement) => (
@@ -279,10 +280,10 @@ function Warehouse() {
                     movement.type === "Kirim" ? "satisfaction-happy" : "satisfaction-sad"
                   }`}
                 >
-                  {movement.type === "Kirim" ? "⬇️" : "⬆️"} {movement.type}
+                  {movement.type === "Kirim" ? "⬇️" : "⬆️"} {movement.type === "Kirim" ? t("incoming") : t("outgoing")}
                 </span>
               </span>
-              <span>{movement.quantity} ta</span>
+              <span>{movement.quantity} {t("item_suffix")}</span>
               <span className="order-date-cell">{formatDate(movement.date)}</span>
               <span className="movement-note">{movement.note}</span>
             </div>
@@ -291,7 +292,7 @@ function Warehouse() {
           {filteredMovements.length === 0 && (
             <div className="no-products">
               <h2>😔 {t("no_movements")}</h2>
-              <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
+              <p>{t("search_filter_hint")}</p>
             </div>
           )}
         </div>
@@ -312,10 +313,10 @@ function Warehouse() {
                 onChange={handleInputChange}
                 required
               >
-                <option value="">Mahsulotni tanlang</option>
+                <option value="">{t("select_product")}</option>
                 {stock.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.name} (hozir: {item.quantity} ta)
+                    {item.name} ({t("current_quantity")}: {item.quantity} {t("item_suffix")})
                   </option>
                 ))}
               </select>
@@ -332,7 +333,7 @@ function Warehouse() {
                 name="quantity"
                 type="number"
                 min="1"
-                placeholder="Miqdori"
+                placeholder={t("quantity")}
                 value={formFields.quantity}
                 onChange={handleInputChange}
                 required
@@ -341,12 +342,12 @@ function Warehouse() {
               <input
                 name="note"
                 type="text"
-                placeholder="Izoh (masalan: yetkazib beruvchidan)"
+                placeholder={t("note")}
                 value={formFields.note}
                 onChange={handleInputChange}
               />
 
-              <button type="submit">💾 Saqlash</button>
+              <button type="submit">💾 {t("save")}</button>
             </form>
           </div>
         </div>

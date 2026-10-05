@@ -88,7 +88,7 @@ function Users() {
       <div className="products-header">
         <div>
           <h1>{t("users_title")} 👥</h1>
-          <p>Tizimdagi barcha foydalanuvchilarni shu yerda boshqarasiz.</p>
+          <p>{t("manage_users_subtitle")}</p>
         </div>
       </div>
 
@@ -96,7 +96,7 @@ function Users() {
         <div className="stat-card purple">
           <div className="stat-icon">👥</div>
           <div>
-            <p>Jami foydalanuvchilar</p>
+            <p>{t("total_users")}</p>
             <h2>{totalUsers}</h2>
           </div>
         </div>
@@ -104,7 +104,7 @@ function Users() {
         <div className="stat-card green">
           <div className="stat-icon">✅</div>
           <div>
-            <p>Faol</p>
+            <p>{t("active_status")}</p>
             <h2>{activeUsers}</h2>
           </div>
         </div>
@@ -112,7 +112,7 @@ function Users() {
         <div className="stat-card orange">
           <div className="stat-icon">🚫</div>
           <div>
-            <p>Bloklangan</p>
+            <p>{t("blocked_status")}</p>
             <h2>{blockedUsers}</h2>
           </div>
         </div>
@@ -120,7 +120,7 @@ function Users() {
         <div className="stat-card blue">
           <div className="stat-icon">👑</div>
           <div>
-            <p>Adminlar</p>
+            <p>{t("admin_count")}</p>
             <h2>{adminCount}</h2>
           </div>
         </div>
@@ -129,16 +129,16 @@ function Users() {
       <div className="products-toolbar">
         <input
           type="text"
-          placeholder="🔍 Ism, email yoki telefon bo'yicha qidirish..."
+          placeholder={`🔍 ${t("search_users")}`}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
 
         <select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
-          <option value="all">Barcha rollar</option>
+          <option value="all">{t("all_roles")}</option>
           {ROLES.map((role) => (
             <option key={role} value={role}>
-              {role}
+              {role === "User" ? t("customer_role") : role === "Manager" ? t("manager_role") : t("admin_role")}
             </option>
           ))}
         </select>
@@ -146,12 +146,12 @@ function Users() {
 
       <div className="orders-list">
         <div className="order-row user-row order-row-head">
-          <span>Foydalanuvchi</span>
-          <span>Telefon</span>
-          <span>Qo'shilgan sana</span>
-          <span>Rol</span>
-          <span>Holati</span>
-          <span>Amallar</span>
+          <span>{t("customer_role")}</span>
+          <span>{t("phone")}</span>
+          <span>{t("joined")}</span>
+          <span>{t("position")}</span>
+          <span>{t("status")}</span>
+          <span>{t("actions")}</span>
         </div>
 
         {filteredUsers.map((user) => (
@@ -176,7 +176,7 @@ function Users() {
               >
                 {ROLES.map((role) => (
                   <option key={role} value={role}>
-                    {role}
+                    {role === "User" ? t("customer_role") : role === "Manager" ? t("manager_role") : t("admin_role")}
                   </option>
                 ))}
               </select>
@@ -188,7 +188,7 @@ function Users() {
                   user.status === "Faol" ? "satisfaction-happy" : "satisfaction-sad"
                 }`}
               >
-                {user.status === "Faol" ? "✅ Faol" : "🚫 Bloklangan"}
+                {user.status === "Faol" ? `✅ ${t("active_status")}` : `🚫 ${t("blocked_status")}`}
               </span>
             </div>
 
@@ -197,7 +197,7 @@ function Users() {
                 className={user.status === "Faol" ? "delete-button" : "edit-button"}
                 onClick={() => toggleStatus(user.id)}
               >
-                {user.status === "Faol" ? "🚫 Blok" : "✅ Aktiv qilish"}
+                {user.status === "Faol" ? `🚫 ${t("block_user")}` : `✅ ${t("activate_user")}`}
               </button>
               <button className="delete-button" onClick={() => handleDelete(user.id)}>
                 🗑️
@@ -209,7 +209,7 @@ function Users() {
         {filteredUsers.length === 0 && (
           <div className="no-products">
             <h2>😔 {t("user_not_found")}</h2>
-            <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
+            <p>{t("search_filter_hint")}</p>
           </div>
         )}
       </div>
