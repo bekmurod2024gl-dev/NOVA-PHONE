@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLocale } from "../../context/LocaleContext";
 import {
   getAccounts,
   getCompletedSalesRecords,
@@ -9,7 +10,7 @@ import {
 
 function AdminDashboard() {
   const navigate = useNavigate();
-
+  const { t, lang } = useLocale();
   const [selectedStat, setSelectedStat] = useState(null);
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [chartPeriod, setChartPeriod] = useState("7");
@@ -35,12 +36,12 @@ function AdminDashboard() {
       window.removeEventListener("nova_purchases_updated", sync);
     };
   }, []);
-
+  const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
+  const formatMoney = (value) => new Intl.NumberFormat(numberLocale).format(value);
   const orders = rawRecords.map((r) => ({
-    id: r.id,
     user: r.customer,
     product: r.product,
-    price: new Intl.NumberFormat("uz-UZ").format(r.price),
+    price: formatMoney(r.price),
   }));
 
   const realUsersCount = accounts.length || 2;
@@ -49,9 +50,7 @@ function AdminDashboard() {
   const totalRevenue = completedRecords.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
   const formattedRevenue = totalRevenue >= 1000000
     ? (totalRevenue / 1000000).toFixed(1).replace(".0", "") + "M"
-    : totalRevenue > 0
-    ? new Intl.NumberFormat("uz-UZ").format(totalRevenue) + " so'm"
-    : "0 so'm";
+        : formatMoney(totalRevenue);
   const totalOrdersCount = rawRecords.length;
   const completedOrdersCount = completedRecords.length;
 
@@ -63,19 +62,7 @@ function AdminDashboard() {
 
     30: {
       values: [35, 55, 48, 75, 60, 88, 70, 95, 65, 80],
-
-      labels: [
-        "1-3",
-        "4-6",
-        "7-9",
-        "10-12",
-        "13-15",
-        "16-18",
-        "19-21",
-        "22-24",
-        "25-27",
-        "28-30",
-      ],
+      labels: ["1-3", "4-6", "7-9", "10-12", "13-15", "16-18", "19-21", "22-24", "25-27", "28-30"],
     },
 
     year: {
@@ -131,8 +118,8 @@ function AdminDashboard() {
       value: formattedRevenue,
       description: "Do'kondan qilingan barcha haqiqiy xaridlar va tushum ko'rsatkichi.",
       details: [
-        `Jami haqiqiy tushum: ${new Intl.NumberFormat("uz-UZ").format(totalRevenue)} so'm`,
-        `O'rtacha chek: ${completedOrdersCount > 0 ? new Intl.NumberFormat("uz-UZ").format(Math.round(totalRevenue / completedOrdersCount)) + " so'm" : "0 so'm"}`,
+        `${t("real_revenue")}: ${formatMoney(totalRevenue)} ${t("currency_label")}`,
+        `${t("average_check")}: ${completedOrdersCount > 0 ? formatMoney(Math.round(totalRevenue / completedOrdersCount)) + ` ${t("currency_label")}` : `0 ${t("currency_label")}`}`,
         "To'lov usullari: Uzcard, Humo, Visa, Mastercard",
       ],
     },
@@ -154,22 +141,22 @@ function AdminDashboard() {
     <div className="admin-dashboard">
       <div className="dashboard-header">
         <div>
-          <h1>Admin Dashboard 👑</h1>
+          <h1>{t("admin_dashboard_title")} 👑</h1>
 
-          <p>Mobile Store boshqaruv paneliga xush kelibsiz.</p>
+          <p>{t("admin_dashboard_subtitle")}</p>
         </div>
 
         <button
           className="add-product-button"
           onClick={() => navigate("/admin/products")}
         >
-          + Yangi mahsulot
+          + {t("new_product")}
         </button>
         <button
           className="secondary-button"
           onClick={() => navigate("/admin/orders")}
         >
-          📦 Buyurtmalarni ko'rish
+          📦 {t("view_orders")}
         </button>
       </div>
 
@@ -181,11 +168,11 @@ function AdminDashboard() {
           <div className="stat-icon">👥</div>
 
           <div>
-            <p>Jami foydalanuvchilar</p>
+            <p>{t("total_users")}</p>
 
             <h2>{realUsersCount}</h2>
 
-            <span>haqiqiy ro'yxatdan o'tganlar</span>
+            <span>{t("genuine_registered")}</span>
           </div>
         </div>
 
@@ -196,11 +183,11 @@ function AdminDashboard() {
           <div className="stat-icon">📱</div>
 
           <div>
-            <p>Jami mahsulotlar</p>
+            <p>{t("total_products")}</p>
 
             <h2>{totalProductsCount}</h2>
 
-            <span>katalogda faol</span>
+            <span>{t("active_catalog")}</span>
           </div>
         </div>
 
@@ -211,11 +198,11 @@ function AdminDashboard() {
           <div className="stat-icon">💰</div>
 
           <div>
-            <p>Umumiy savdo</p>
+            <p>{t("total_revenue")}</p>
 
-            <h2>{formattedRevenue}</h2>
+              <h2>{formattedRevenue} {t("currency_label")}</h2>
 
-            <span>haqiqiy tushum</span>
+            <span>{t("real_revenue")}</span>
           </div>
         </div>
 
@@ -226,11 +213,11 @@ function AdminDashboard() {
           <div className="stat-icon">📦</div>
 
           <div>
-            <p>Buyurtmalar</p>
+            <p>{t("orders")}</p>
 
             <h2>{totalOrdersCount}</h2>
 
-            <span>jami xaridlar</span>
+            <span>{t("total_purchases")}</span>
           </div>
         </div>
       </div>
@@ -239,17 +226,17 @@ function AdminDashboard() {
       <div className="dashboard-grid">
         <div className="chart-card">
           <div className="card-header">
-            <h2>Savdo statistikasi</h2>
+            <h2>{t("sales_stats")}</h2>
 
             <select
               value={chartPeriod}
               onChange={(event) => setChartPeriod(event.target.value)}
             >
-              <option value="7">Oxirgi 7 kun</option>
+              <option value="7">{t("last_7_days")}</option>
 
-              <option value="30">Oxirgi 30 kun</option>
+              <option value="30">{t("last_30_days")}</option>
 
-              <option value="year">Bu yil</option>
+              <option value="year">{t("this_year")}</option>
             </select>
           </div>
 
@@ -275,16 +262,16 @@ function AdminDashboard() {
 
         <div className="recent-orders">
           <div className="card-header">
-            <h2>So‘nggi buyurtmalar</h2>
+            <h2>{t("recent_orders")}</h2>
 
             <button onClick={() => setShowAllOrders(!showAllOrders)}>
-              {showAllOrders ? "Yopish" : "Hammasi"}
+              {showAllOrders ? t("show_less") : t("all")}
             </button>
           </div>
 
           {orders.length === 0 ? (
             <p style={{ padding: "20px", opacity: 0.7, textAlign: "center" }}>
-              Hozircha buyurtmalar mavjud emas
+              {t("no_orders_yet")}
             </p>
           ) : (
             (showAllOrders ? orders : orders.slice(0, 3)).map((order) => (
@@ -294,7 +281,7 @@ function AdminDashboard() {
                   <h4>{order.user}</h4>
                   <p>{order.product}</p>
                 </div>
-                <strong>{order.price} so'm</strong>
+                <strong>{order.price} {t("currency_label")}</strong>
               </div>
             ))
           )}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getSessionUser, submitJobApplication, getUserDisplayName, getUserPurchases, getUserLiked } from "../../utils/userStorage";
+import { useLocale } from "../../context/LocaleContext";
 
 const catalog = [
   {
@@ -391,6 +392,7 @@ const catalog = [
 ];
 
 function UserDashboard() {
+  const { t, lang } = useLocale();
   const [currentUser, setCurrentUser] = useState(() => getSessionUser());
   const [purchases, setPurchases] = useState(() => getUserPurchases(currentUser?.id));
   const [liked, setLiked] = useState(() => getUserLiked(currentUser?.id));
@@ -447,9 +449,10 @@ function UserDashboard() {
   };
 
   const displayName = getUserDisplayName(currentUser);
-  const formatPrice = (price) => new Intl.NumberFormat("uz-UZ").format(price);
+  const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
+  const formatPrice = (price) => new Intl.NumberFormat(numberLocale).format(price);
   const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit" });
+    new Date(dateStr).toLocaleDateString(numberLocale, { day: "2-digit", month: "2-digit" });
 
   const totalSpent = purchases
     .filter((p) => p.status !== "Bekor qilindi")
@@ -496,20 +499,27 @@ function UserDashboard() {
     }
   };
 
+  const statusLabel = (status) => ({
+    Kutilmoqda: t("in_transit"),
+    Yetkazilmoqda: t("in_transit"),
+    Yetkazildi: t("delivered"),
+    "Bekor qilindi": t("cancelled"),
+  }[status] || status);
+
   return (
     <div className="user-home-page">
       {/* GREETING BANNER */}
       <div className="user-banner">
         <div>
-          <span className="user-banner-tag">MIJOZ PANELI</span>
-          <h1>Salom, {displayName}! 👋</h1>
-          <p>Yangi telefonlarni ko'rib chiqing va o'z buyurtmalaringizni kuzating.</p>
+          <span className="user-banner-tag">{t("customer_panel")}</span>
+              <h1>{t("hello")}, {displayName}! 👋</h1>
+              <p>{t("new_phones")}</p>
           <Link to="/user/products" className="user-banner-cta">
-            📱 Mahsulotlarni ko'rish
+                📱 {t("browse_products")}
           </Link>
           <div className="user-banner-actions">
-            <Link to="/user/liked" className="secondary-button">❤️ Sevimlilar</Link>
-            <Link to="/user/buy" className="secondary-button">🛒 Savatcha</Link>
+                <Link to="/user/liked" className="secondary-button">❤️ {t("nav_favorites")}</Link>
+                <Link to="/user/buy" className="secondary-button">🛒 {t("nav_cart")}</Link>
           </div>
         </div>
         <div className="user-banner-figure">📱</div>
@@ -519,22 +529,22 @@ function UserDashboard() {
       <div className="user-stat-strip">
         <div className="user-stat-item">
           <span className="user-stat-value">{purchases.length}</span>
-          <span className="user-stat-label">Jami xaridlar</span>
+          <span className="user-stat-label">{t("total_purchases")}</span>
         </div>
         <div className="user-stat-divider"></div>
         <div className="user-stat-item">
           <span className="user-stat-value accent-pink">{activeCount}</span>
-          <span className="user-stat-label">Yo'lda</span>
+          <span className="user-stat-label">{t("in_transit")}</span>
         </div>
         <div className="user-stat-divider"></div>
         <div className="user-stat-item">
           <span className="user-stat-value accent-heart">{liked.length}</span>
-          <span className="user-stat-label">Sevimlilar</span>
+          <span className="user-stat-label">{t("nav_favorites")}</span>
         </div>
         <div className="user-stat-divider"></div>
         <div className="user-stat-item">
           <span className="user-stat-value">{formatPrice(totalSpent)}</span>
-          <span className="user-stat-label">Jami sarflangan (so'm)</span>
+          <span className="user-stat-label">{t("total_spent")} ({t("currency_label")})</span>
         </div>
       </div>
 
@@ -543,15 +553,14 @@ function UserDashboard() {
         <div className="user-section-card delivery-highlight">
           <div className="delivery-highlight-icon">🚚</div>
           <div className="delivery-highlight-info">
-            <h3>Eng yaqin yetkazib berish</h3>
+            <h3>{t("nearest_delivery")}</h3>
             <p>
-              <strong>{upcoming.productName}</strong> — {formatDate(upcoming.deliveryDate)} sanasida
-              yetkaziladi
-              {daysUntil(upcoming.deliveryDate) > 0 && ` (${daysUntil(upcoming.deliveryDate)} kun qoldi)`}
+              <strong>{upcoming.productName}</strong> — {formatDate(upcoming.deliveryDate)} {t("delivery_date").toLowerCase()}
+              {daysUntil(upcoming.deliveryDate) > 0 && ` (${daysUntil(upcoming.deliveryDate)} ${t("days_left")})`}
             </p>
           </div>
           <Link to="/user/buy" className="user-see-all">
-            Ko'rish →
+            {t("view")} →
           </Link>
         </div>
       )}
@@ -561,7 +570,7 @@ function UserDashboard() {
         <div className="user-mini-widget">
           <span className="user-mini-icon">🏆</span>
           <div>
-            <p>Sevimli brendingiz</p>
+            <p>{t("favorite_brand")}</p>
             <h4>{favoriteBrand}</h4>
           </div>
         </div>
@@ -569,16 +578,16 @@ function UserDashboard() {
         <div className="user-mini-widget">
           <span className="user-mini-icon">✅</span>
           <div>
-            <p>Yetkazib berilgan</p>
-            <h4>{deliveredCount} ta buyurtma</h4>
+            <p>{t("delivered_orders")}</p>
+            <h4>{deliveredCount} {t("item_suffix")}</h4>
           </div>
         </div>
 
         <div className="user-mini-widget">
           <span className="user-mini-icon">🎁</span>
           <div>
-            <p>Katalogdagi mahsulotlar</p>
-            <h4>{catalog.length} ta telefon</h4>
+            <p>{t("catalog_products")}</p>
+            <h4>{catalog.length} {t("phones")}</h4>
           </div>
         </div>
       </div>
@@ -601,12 +610,12 @@ function UserDashboard() {
           <div style={{ fontSize: "36px" }}>💼</div>
           <div>
             <h3 style={{ margin: "0 0 4px 0", color: "#fff" }}>
-              {isAlreadyEmployee ? "Siz NOVA-PHONE rasmiy xodimisiz!" : "NOVA-PHONE jamoasiga ishga kiring!"}
+              {isAlreadyEmployee ? t("employee_heading") : t("team_heading")}
             </h3>
             <p style={{ margin: 0, opacity: 0.85, fontSize: "13.5px" }}>
               {isAlreadyEmployee
-                ? "Siz xodim sifatida qabul qilingansiz. Shaxsiy ishchi paneli va maoshingizni ko'rishingiz mumkin."
-                : "Sotuvchi-maslahatchi, kassir, ombor xodimi yoki kuryerlik lavozimiga online ariza topshiring."}
+                ? t("employee_message")
+                : t("team_message")}
             </p>
           </div>
         </div>
@@ -616,7 +625,7 @@ function UserDashboard() {
             className="add-product-button"
             style={{ textDecoration: "none", background: "#10b981", whiteSpace: "nowrap" }}
           >
-            👷‍♂️ Ishchi panelimga o'tish →
+            👷‍♂️ {t("employee_panel")} →
           </Link>
         ) : (
           <button
@@ -625,7 +634,7 @@ function UserDashboard() {
             style={{ whiteSpace: "nowrap" }}
             onClick={() => setShowJobModal(true)}
           >
-            📝 Online ariza topshirish
+            📝 {t("apply_job")}
           </button>
         )}
       </div>
@@ -633,16 +642,16 @@ function UserDashboard() {
       {/* RECENT PURCHASES */}
       <div className="user-section-card">
         <div className="manager-panel-header">
-          <h2>🛒 So'nggi xaridlar</h2>
+          <h2>🛒 {t("latest_purchases")}</h2>
           <Link to="/user/buy" className="user-see-all">
-            Hammasi →
+            {t("all")} →
           </Link>
         </div>
 
         {purchases.length === 0 ? (
           <div className="manager-empty-state">
             <span>📱</span>
-            <p>Hali xarid yo'q — Products bo'limidan birinchi xaridingizni qiling!</p>
+            <p>{t("no_orders")} — {t("no_purchase_hint")}</p>
           </div>
         ) : (
           <div className="my-orders-list">
@@ -659,9 +668,9 @@ function UserDashboard() {
                   />
                   <div className="my-order-info">
                     <h4>{productName}</h4>
-                    <p>{formatPrice(productPrice)} so'm</p>
+                    <p>{formatPrice(productPrice)} {t("currency_label")}</p>
                     <span className={`status-badge ${statusClass(purchase.status)}`}>
-                      {purchase.status || "Yetkazilmoqda"}
+                      {statusLabel(purchase.status || "Yetkazilmoqda")}
                     </span>
                   </div>
                 </div>
@@ -675,9 +684,9 @@ function UserDashboard() {
       {/* RECOMMENDED */}
       <div className="user-section-card">
         <div className="manager-panel-header">
-          <h2>✨ Tavsiya etilgan telefonlar</h2>
+          <h2>✨ {t("recommended_phones")}</h2>
           <Link to="/user/products" className="user-see-all">
-            Hammasi →
+            {t("all")} →
           </Link>
         </div>
 
@@ -691,7 +700,7 @@ function UserDashboard() {
               />
               <span className="discount-badge">-{product.discount}%</span>
               <h4>{product.name}</h4>
-              <strong>{formatPrice(product.price)} so'm</strong>
+              <strong>{formatPrice(product.price)} {t("currency_label")}</strong>
             </Link>
           ))}
         </div>
@@ -702,7 +711,7 @@ function UserDashboard() {
         <div className="modal-overlay" onClick={() => setShowJobModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>💼 NOVA-PHONE da Ishga Ariza Topshirish</h2>
+              <h2>💼 {t("job_modal_title")}</h2>
               <button className="modal-close" onClick={() => setShowJobModal(false)}>
                 ✕
               </button>
@@ -711,16 +720,15 @@ function UserDashboard() {
             {jobSubmitted ? (
               <div style={{ padding: "40px", textAlign: "center" }}>
                 <span style={{ fontSize: "48px" }}>🎉</span>
-                <h3 style={{ margin: "16px 0 8px 0" }}>Arizangiz muvaffaqiyatli qabul qilindi!</h3>
+                <h3 style={{ margin: "16px 0 8px 0" }}>{t("application_success")}</h3>
                 <p style={{ opacity: 0.85, fontSize: "14px" }}>
-                  Bosh administrator (Bobomurod jumaboyev) arizangizni ko'rib chiqadi va tasdiqlangach,
-                  ishchilar ro'yxatiga qo'shilasiz hamda shaxsiy ishchi kabinetingiz ochiladi.
+                  {t("application_review")}
                 </p>
               </div>
             ) : (
               <form onSubmit={handleJobSubmit} className="modal-form">
                 <div className="form-group">
-                  <label>Nomzod (Sizning ismingiz)</label>
+                  <label>{t("candidate_name")}</label>
                   <input
                     type="text"
                     value={getUserDisplayName(currentUser)}
@@ -730,7 +738,7 @@ function UserDashboard() {
                 </div>
 
                 <div className="form-group">
-                  <label>Telefon raqamingiz</label>
+                  <label>{t("phone_number")}</label>
                   <input
                     type="text"
                     value={currentUser?.phone || "+998 90 000 00 00"}
@@ -740,35 +748,35 @@ function UserDashboard() {
                 </div>
 
                 <div className="form-group">
-                  <label>Qaysi lavozimda ishlamoqchisiz?</label>
+                  <label>{t("desired_position")}</label>
                   <select
                     value={jobPosition}
                     onChange={(e) => setJobPosition(e.target.value)}
                     required
                   >
-                    <option value="Sotuvchi-maslahatchi">Sotuvchi-maslahatchi (Savdo zali)</option>
-                    <option value="Kassir">Kassir (Moliya va to'lovlar)</option>
-                    <option value="Ombor xodimi">Ombor xodimi (Qabul qilish va saralash)</option>
-                    <option value="Yetkazib beruvchi (Kuryer)">Yetkazib beruvchi / Kuryer</option>
-                    <option value="Menejer yordamchisi">Menejer yordamchisi</option>
+                    <option value="Sotuvchi-maslahatchi">{t("sales_consultant_position")}</option>
+                    <option value="Kassir">{t("cashier_position")}</option>
+                    <option value="Ombor xodimi">{t("warehouse_position")}</option>
+                    <option value="Yetkazib beruvchi (Kuryer)">{t("courier_position")}</option>
+                    <option value="Menejer yordamchisi">{t("assistant_manager_position")}</option>
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Ish tajribangiz (ixtiyoriy)</label>
+                  <label>{t("experience")} ({t("optional")})</label>
                   <input
                     type="text"
-                    placeholder="Masalan: 1 yil telefon do'konida yoki yangi boshlovchi"
+                    placeholder={t("experience_example")}
                     value={jobExperience}
                     onChange={(e) => setJobExperience(e.target.value)}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Qo'shimcha xabar / Nega aynan siz?</label>
+                  <label>{t("why_you_label")}</label>
                   <textarea
                     rows="3"
-                    placeholder="O'zingiz haqingizda qisqacha ma'lumot qoldiring..."
+                    placeholder={t("about_you_placeholder")}
                     value={jobMessage}
                     onChange={(e) => setJobMessage(e.target.value)}
                     required
@@ -781,10 +789,10 @@ function UserDashboard() {
                     className="cancel-button"
                     onClick={() => setShowJobModal(false)}
                   >
-                    Bekor qilish
+                    {t("form_cancel")}
                   </button>
                   <button type="submit" className="save-button">
-                    🚀 Arizani yuborish
+                    🚀 {t("submit_application")}
                   </button>
                 </div>
               </form>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../context/LocaleContext";
 
 const defaultReviews = [
   {
@@ -44,6 +45,7 @@ const defaultReviews = [
 ];
 
 function Reviews() {
+  const { t } = useLocale();
   const [reviews] = useState(() => {
     const saved = localStorage.getItem("nova_reviews_v1");
     return saved ? JSON.parse(saved) : defaultReviews;
@@ -77,7 +79,7 @@ function Reviews() {
     <div className="orders-page">
       <div className="products-header">
         <div>
-          <h1>Mijozlar izohlari 💬</h1>
+          <h1>{t("reviews_title")} 💬</h1>
           <p>Mijozlarning fikr-mulohazalarini shu yerdan kuzatib boring.</p>
         </div>
       </div>
@@ -139,7 +141,7 @@ function Reviews() {
 
         {filtered.length === 0 && (
           <div className="no-products">
-            <h2>😔 Izoh topilmadi</h2>
+            <h2>😔 {t("review_not_found")}</h2>
             <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
           </div>
         )}

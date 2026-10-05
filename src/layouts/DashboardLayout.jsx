@@ -1,85 +1,85 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useLocale } from "../context/LocaleContext";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { clearSessionUser, getCurrentRole, getSessionUser, safeParse } from "../utils/userStorage";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 
 const MENUS = {
   admin: {
-    profileLabel: "Administrator",
+    profileLabel: "admin_role",
     profileIcon: "👑",
     sections: [
       {
         title: null,
-        links: [{ to: "/admin/dashboard", label: "Dashboard", icon: "📊", end: true }],
+        links: [{ to: "/admin/dashboard", label: "nav_dashboard", icon: "📊", end: true }],
       },
       {
-        title: "SHOP",
+        title: "section_shop",
         links: [
-          { to: "/admin/products", label: "Products", icon: "📱" },
-          { to: "/admin/orders", label: "Orders", icon: "🛒" },
-          { to: "/admin/sales", label: "Sales", icon: "💰" },
-          { to: "/admin/warehouse", label: "Warehouse", icon: "📦" },
+          { to: "/admin/products", label: "nav_products", icon: "📱" },
+          { to: "/admin/orders", label: "nav_orders", icon: "🛒" },
+          { to: "/admin/sales", label: "nav_sales", icon: "💰" },
+          { to: "/admin/warehouse", label: "nav_warehouse", icon: "📦" },
         ],
       },
       {
-        title: "PEOPLE",
+        title: "section_people",
         links: [
-          { to: "/admin/users", label: "Users", icon: "👥" },
-          { to: "/admin/employees", label: "Employees", icon: "👨‍💼" },
-          { to: "/employee", label: "Ishchi paneli", icon: "👷‍♂️" },
+          { to: "/admin/users", label: "nav_users", icon: "👥" },
+          { to: "/admin/employees", label: "nav_employees", icon: "👨‍💼" },
+          { to: "/employee", label: "nav_employee_panel", icon: "👷‍♂️" },
         ],
       },
       {
-        title: "ANALYTICS",
+        title: "section_analytics",
         links: [
-          { to: "/admin/analytics", label: "Analytics", icon: "📈" },
-          { to: "/admin/promotions", label: "Promotions", icon: "🎟️" },
+          { to: "/admin/analytics", label: "nav_analytics", icon: "📈" },
+          { to: "/admin/promotions", label: "nav_promotions", icon: "🎟️" },
         ],
       },
       {
-        title: "SYSTEM",
-        links: [{ to: "/admin/settings", label: "Settings", icon: "⚙️" }],
+        title: "section_system",
+        links: [{ to: "/admin/settings", label: "nav_settings", icon: "⚙️" }],
       },
     ],
   },
 
   manager: {
-    profileLabel: "Menejer",
+    profileLabel: "manager_role",
     profileIcon: "👨‍💼",
     sections: [
       {
         title: null,
-        links: [{ to: "/manager", label: "Dashboard", icon: "📊", end: true }],
+        links: [{ to: "/manager", label: "nav_dashboard", icon: "📊", end: true }],
       },
       {
-        title: "SHOP",
+        title: "section_shop",
         links: [
-          { to: "/manager/orders", label: "Orders", icon: "🛒" },
-          { to: "/manager/sales", label: "Sales", icon: "💰" },
-          { to: "/manager/warehouse", label: "Warehouse", icon: "📦" },
+          { to: "/manager/orders", label: "nav_orders", icon: "🛒" },
+          { to: "/manager/sales", label: "nav_sales", icon: "💰" },
+          { to: "/manager/warehouse", label: "nav_warehouse", icon: "📦" },
         ],
       },
       {
-        title: "OPERATIONS",
+        title: "section_operations",
         links: [
-          { to: "/manager/approvals", label: "Tasdiqlash", icon: "🔔" },
-          { to: "/manager/attendance", label: "Davomat", icon: "🧑‍💼" },
-          { to: "/manager/workers", label: "Ishchilar", icon: "💼" },
-          { to: "/manager/reviews", label: "Izohlar", icon: "💬" },
-          { to: "/manager/damaged", label: "Zararlar", icon: "🔧" },
+          { to: "/manager/approvals", label: "nav_approvals", icon: "🔔" },
+          { to: "/manager/attendance", label: "nav_attendance", icon: "🧑‍💼" },
+          { to: "/manager/workers", label: "nav_workers", icon: "💼" },
+          { to: "/manager/reviews", label: "nav_reviews", icon: "💬" },
+          { to: "/manager/damaged", label: "nav_damaged", icon: "🔧" },
         ],
       },
     ],
   },
 
   user: {
-    profileLabel: "Foydalanuvchi",
+    profileLabel: "customer_role",
     profileIcon: "🙂",
     sections: [
       {
         title: null,
-        links: [{ to: "/user", label: "Dashboard", icon: "📊", end: true }],
+        links: [{ to: "/user", label: "nav_dashboard", icon: "📊", end: true }],
       },
     ],
   },
@@ -87,7 +87,7 @@ const MENUS = {
 
 function DashboardLayout() {
   const navigate = useNavigate();
-  const { lang, setLang, t } = useLocale();
+  const { lang, t } = useLocale();
 
   const role = getCurrentRole() || "user";
   const [profileData, setProfileData] = useState(() => {
@@ -226,7 +226,7 @@ function DashboardLayout() {
           {filteredSections.length ? (
             filteredSections.map((section, index) => (
               <div className={section.title && sidebarOpen ? "menu-section" : undefined} key={index}>
-                {section.title && sidebarOpen && <p>{section.title}</p>}
+                {section.title && sidebarOpen && <p>{t(section.title)}</p>}
 
                 {section.links.map((link) => (
                   <NavLink
@@ -236,7 +236,7 @@ function DashboardLayout() {
                     className={({ isActive }) => (isActive ? "menu-link active" : "menu-link")}
                   >
                     <span>{link.icon}</span>
-                    {sidebarOpen && <span>{link.label}</span>}
+                    {sidebarOpen && <span>{t(link.label)}</span>}
                   </NavLink>
                 ))}
               </div>
@@ -250,7 +250,7 @@ function DashboardLayout() {
           <div className="profile-avatar">{menu.profileIcon}</div>
           <div className="profile-info">
             <strong>{profileData.name}</strong>
-            <span>{role === "admin" ? (profileData.position || "Bosh administrator") : menu.profileLabel}</span>
+            <span>{role === "admin" ? (profileData.position || "Bosh administrator") : t(menu.profileLabel)}</span>
           </div>
         </div>
 

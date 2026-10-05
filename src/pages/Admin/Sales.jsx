@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSalesRecords, isFakePerson, safeParse } from "../../utils/userStorage";
+import { useLocale } from "../../context/LocaleContext";
 
 const SATISFACTION_LIST = ["Mamnun", "Neytral", "Norozi"];
 
@@ -22,6 +23,7 @@ function getRealSales() {
 }
 
 function Sales() {
+  const { t } = useLocale();
   const [sales, setSales] = useState(() => getRealSales());
   const [search, setSearch] = useState("");
   const [satisfactionFilter, setSatisfactionFilter] = useState("all");
@@ -116,7 +118,7 @@ function Sales() {
     <div className="sales-page">
       <div className="products-header">
         <div>
-          <h1>Savdolar va Mijozlar Fikri 💰</h1>
+          <h1>{t("sales_title")} 💰</h1>
           <p>Haqiqiy xaridorlar va amalga oshirilgan savdolar hisoboti.</p>
         </div>
       </div>
@@ -239,7 +241,7 @@ function Sales() {
 
         {filteredSales.length === 0 && (
           <div className="no-products" style={{ padding: "40px", textAlign: "center" }}>
-            <h2>🛍️ Hozircha savdolar mavjud emas</h2>
+            <h2>🛍️ {t("no_sales_yet")}</h2>
             <p>
               Haqiqiy foydalanuvchilar saytdan ro'yxatdan o'tib smartfon xarid qilganda, barcha xaridlar va sharhlar
               avtomatik ravishda shu yerda aks etadi.

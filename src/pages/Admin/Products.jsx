@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { HARDCODED_PRODUCTS } from "../User/Products";
+import { useLocale } from "../../context/LocaleContext";
 
 const resolveApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
@@ -27,6 +28,7 @@ async function safeJsonResponse(response) {
 }
 
 function AdminProducts() {
+  const { t } = useLocale();
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
@@ -133,32 +135,32 @@ function AdminProducts() {
 
   return (
     <section className="admin-products-page">
-      <div className="products-header"><div><h1>Mahsulotlar</h1><p>Mahsulotlarni qo'shing, tahrirlang yoki o'chiring.</p></div><strong className="admin-products-count">Jami: {products.length} ta</strong></div>
+      <div className="products-header"><div><h1>{t("products_admin_title")}</h1><p>{t("products_admin_subtitle")}</p></div><strong className="admin-products-count">{t("product_count")}: {products.length} {t("item_suffix")}</strong></div>
       <form className="admin-product-form" onSubmit={saveProduct}>
-        <div className="admin-form-heading"><h2>{editingId ? "Mahsulotni yangilash" : "Yangi mahsulot qo'shish"}</h2>{editingId && <button type="button" className="secondary-button" onClick={resetForm}>Bekor qilish</button>}</div>
+        <div className="admin-form-heading"><h2>{editingId ? t("update_product") : t("new_product")}</h2>{editingId && <button type="button" className="secondary-button" onClick={resetForm}>{t("form_cancel")}</button>}</div>
         <div className="admin-form-grid">
-          <input name="name" value={form.name} onChange={updateField} placeholder="Mahsulot nomi" required />
-          <input name="brand" value={form.brand} onChange={updateField} placeholder="Brend" required />
-          <input name="category" value={form.category} onChange={updateField} placeholder="Kategoriya" required />
-          <input name="price" type="number" min="0" value={form.price} onChange={updateField} placeholder="Narxi" required />
-          <input name="stock" type="number" min="0" value={form.stock} onChange={updateField} placeholder="Ombordagi soni" required />
-          <input name="image" value={form.image} onChange={updateField} placeholder="Rasm manzili" required />
-          <textarea name="description" value={form.description} onChange={updateField} placeholder="Tavsif" required />
+          <input name="name" value={form.name} onChange={updateField} placeholder={t("product_name")} required />
+          <input name="brand" value={form.brand} onChange={updateField} placeholder={t("brand_name")} required />
+          <input name="category" value={form.category} onChange={updateField} placeholder={t("category")} required />
+          <input name="price" type="number" min="0" value={form.price} onChange={updateField} placeholder={t("product_price")} required />
+          <input name="stock" type="number" min="0" value={form.stock} onChange={updateField} placeholder={t("stock_quantity")} required />
+          <input name="image" value={form.image} onChange={updateField} placeholder={t("image_url")} required />
+          <textarea name="description" value={form.description} onChange={updateField} placeholder={t("product_description")} required />
         </div>
-        <button className="admin-save-button" type="submit" disabled={saving}>{saving ? "Saqlanmoqda..." : editingId ? "Yangilash" : "Qo'shish"}</button>
+        <button className="admin-save-button" type="submit" disabled={saving}>{saving ? t("saving") : editingId ? t("save_changes") : t("new_product")}</button>
       </form>
       {message && <p className="admin-success-message">{message}</p>}
       {error && <p className="admin-error-message">{error}</p>}
-      <div className="admin-products-toolbar"><input id="admin-product-search" name="productSearch" type="search" autoComplete="off" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Mahsulot qidirish..." /><button type="button" className="secondary-button" onClick={loadProducts}>Yangilash</button></div>
+      <div className="admin-products-toolbar"><input id="admin-product-search" name="productSearch" type="search" autoComplete="off" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("search_products")} /><button type="button" className="secondary-button" onClick={loadProducts}>{t("refresh_data")}</button></div>
       <div className="admin-products-table-wrap">
-        {loading ? <p className="admin-products-empty">Yuklanmoqda...</p> : visibleProducts.length === 0 ? <p className="admin-products-empty">Mahsulot topilmadi.</p> : <div className="products-grid admin-products-grid">{visibleProducts.map((product) => <article className="product-card" key={product.id}>
+        {loading ? <p className="admin-products-empty">{t("loading")}</p> : visibleProducts.length === 0 ? <p className="admin-products-empty">{t("products_empty")}</p> : <div className="products-grid admin-products-grid">{visibleProducts.map((product) => <article className="product-card" key={product.id}>
           <div className="product-image"><img src={product.image || "/images/images.jpeg"} alt={product.name} onError={(event) => { event.currentTarget.src = "/images/images.jpeg"; }} /></div>
           <div className="product-info">
             <div className="product-brand">{product.brand}</div>
             <h2>{product.name}</h2>
             <p className="product-description">{product.description}</p>
-            <div className="price-row"><h3>{new Intl.NumberFormat("uz-UZ").format(product.price)} so'm</h3><span>Ombor: {product.stock} ta</span></div>
-            <div className="admin-product-actions"><button className="edit-button" type="button" onClick={() => startEdit(product)}>Tahrirlash</button><button className="delete-button" type="button" onClick={() => removeProduct(product)}>O'chirish</button></div>
+            <div className="price-row"><h3>{new Intl.NumberFormat("uz-UZ").format(product.price)} so'm</h3><span>{t("warehouse_quantity")}: {product.stock}</span></div>
+            <div className="admin-product-actions"><button className="edit-button" type="button" onClick={() => startEdit(product)}>{t("edit")}</button><button className="delete-button" type="button" onClick={() => removeProduct(product)}>{t("delete")}</button></div>
           </div>
         </article>)}</div>}
       </div>

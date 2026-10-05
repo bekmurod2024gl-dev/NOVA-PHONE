@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useLocale } from "../../context/LocaleContext";
 
 const initialPendingOrders = [
   {
@@ -111,6 +112,7 @@ const damagedItems = [
 ];
 
 function ManagerDashboard() {
+  const { t, lang } = useLocale();
   const [pendingOrders, setPendingOrders] = useState(initialPendingOrders);
 
   const handleApprove = (id) => {
@@ -123,11 +125,12 @@ function ManagerDashboard() {
   };
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Xayrli tong" : hour < 18 ? "Xayrli kun" : "Xayrli kech";
+  const greeting = hour < 12 ? t("good_morning") : hour < 18 ? t("good_afternoon") : t("good_evening");
 
-  const formatSum = (value) => new Intl.NumberFormat("uz-UZ").format(value);
+  const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
+  const formatSum = (value) => new Intl.NumberFormat(numberLocale).format(value);
   const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit" });
+    new Date(dateStr).toLocaleDateString(numberLocale, { day: "2-digit", month: "2-digit" });
 
   const todayRevenue = 18500000;
   const totalLoss = damagedItems.reduce((sum, item) => sum + item.loss, 0);
@@ -148,7 +151,7 @@ function ManagerDashboard() {
       <div className="manager-banner">
         <div>
           <span className="manager-banner-tag">MANAGER PANELI</span>
-          <h1>{greeting}, Menejer 👋</h1>
+          <h1>{greeting}, {t("manager_role")} 👋</h1>
           <p>Bugun {pendingOrders.length} ta buyurtma tasdiqlashingizni kutmoqda.</p>
           <div className="manager-banner-actions">
             <Link to="/manager/approvals" className="user-banner-cta">🔔 Tasdiqlashlarni ko'rish</Link>
@@ -211,7 +214,7 @@ function ManagerDashboard() {
       {/* PRIORITY: PENDING APPROVALS */}
       <div className="manager-priority-panel">
         <div className="manager-panel-header">
-          <h2>🔔 Tasdiqlash kutayotgan buyurtmalar</h2>
+          <h2>🔔 {t("pending_approvals")}</h2>
           <span className="manager-panel-count">{pendingOrders.length} ta</span>
         </div>
 
@@ -252,7 +255,7 @@ function ManagerDashboard() {
       {/* ATTENDANCE & ACTIVITY */}
       <div className="manager-priority-panel">
         <div className="manager-panel-header">
-          <h2>🧑‍💼 Xodimlar davomati va faolligi</h2>
+          <h2>🧑‍💼 {t("attendance_activity")}</h2>
           <span className="manager-panel-count">
             {presentCount} keldi · {absentCount} kelmadi
           </span>
@@ -298,7 +301,7 @@ function ManagerDashboard() {
       {/* CUSTOMER REVIEWS */}
       <div className="manager-priority-panel">
         <div className="manager-panel-header">
-          <h2>💬 Mijozlar izohlari</h2>
+          <h2>💬 {t("customer_reviews")}</h2>
           <span className="manager-panel-count">O'rtacha: {avgRating} ★</span>
         </div>
 

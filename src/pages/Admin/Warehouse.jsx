@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../context/LocaleContext";
 
 const LOW_STOCK_THRESHOLD = 10;
 const MOVEMENT_TYPES = ["Kirim", "Chiqim"];
@@ -68,6 +69,7 @@ const initialFormState = {
 };
 
 function Warehouse() {
+  const { t } = useLocale();
   const [stock, setStock] = useState(() => {
     const saved = localStorage.getItem("nova_warehouse_stock_v1");
     return saved ? JSON.parse(saved) : defaultStock;
@@ -166,7 +168,7 @@ function Warehouse() {
     <div className="warehouse-page">
       <div className="products-header">
         <div>
-          <h1>Ombor 🏬</h1>
+          <h1>{t("warehouse_title")} 🏬</h1>
           <p>Mahsulotlar zaxirasi va kirim-chiqim tarixini shu yerdan boshqarasiz.</p>
         </div>
         <button className="add-product-button" onClick={() => setShowModal(true)}>
@@ -210,7 +212,7 @@ function Warehouse() {
 
       {/* STOCK OVERVIEW */}
       <div className="warehouse-section">
-        <h2 className="section-title">Zaxira holati</h2>
+        <h2 className="section-title">{t("stock_status")}</h2>
 
         <div className="stock-table">
           <div className="stock-row stock-row-head">
@@ -239,7 +241,7 @@ function Warehouse() {
 
       {/* MOVEMENT HISTORY */}
       <div className="warehouse-section">
-        <h2 className="section-title">Kirim / Chiqim tarixi</h2>
+        <h2 className="section-title">{t("stock_history")}</h2>
 
         <div className="products-toolbar">
           <input
@@ -288,7 +290,7 @@ function Warehouse() {
 
           {filteredMovements.length === 0 && (
             <div className="no-products">
-              <h2>😔 Harakat topilmadi</h2>
+              <h2>😔 {t("no_movements")}</h2>
               <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
             </div>
           )}
@@ -299,7 +301,7 @@ function Warehouse() {
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
-              <h2>Kirim / Chiqim qo'shish</h2>
+              <h2>{t("stock_history")}</h2>
               <button onClick={handleCloseModal}>✕</button>
             </div>
 

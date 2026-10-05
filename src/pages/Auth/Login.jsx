@@ -108,13 +108,13 @@ function Login() {
           <img src="/images/logo.png" alt="NOVA PHONE" />
         </div>
 
-        <h1>{forgotPassword ? "Parolni tiklash" : t("mobile_store")}</h1>
+        <h1>{forgotPassword ? t("password_reset_title") : t("mobile_store")}</h1>
         <p className="login-subtitle">
           {forgotPassword
-            ? "Yangi parol o'rnatish uchun username kiriting"
+            ? t("password_reset_subtitle")
             : mode === "login"
             ? t("login_welcome")
-            : "Yangi akkaunt yaratish uchun username va parol kiriting"}
+            : t("register_subtitle")}
         </p>
 
         {!forgotPassword && (
@@ -143,7 +143,7 @@ function Login() {
                 setSuccess("");
               }}
             >
-              📝 Ro'yxatdan o'tish
+              📝 {t("register")}
             </button>
           </div>
         )}
@@ -158,7 +158,7 @@ function Login() {
                 name="username"
                 type="text"
                 autoComplete="username"
-                placeholder={mode === "register" ? "Yangi username tanlang" : "Username kiriting"}
+                placeholder={mode === "register" ? t("register_username_placeholder") : t("username_placeholder")}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -176,7 +176,7 @@ function Login() {
                   name="password"
                   type="password"
                   autoComplete={mode === "register" ? "new-password" : "current-password"}
-                  placeholder={mode === "register" ? "Parol yarating (kamida 4 belgi)" : "Parolni kiriting"}
+                  placeholder={mode === "register" ? t("register_password_placeholder") : t("password_placeholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -187,7 +187,7 @@ function Login() {
 
           {forgotPassword && (
             <div className="input-group">
-              <label htmlFor="auth-new-password">Yangi parol</label>
+              <label htmlFor="auth-new-password">{t("new_password")}</label>
               <div className="auth-input-wrapper">
                 <span className="auth-input-icon">🔒</span>
                 <input
@@ -195,7 +195,7 @@ function Login() {
                   name="newPassword"
                   type="password"
                   autoComplete="new-password"
-                  placeholder="Yangi parolni kiriting (kamida 4 belgi)"
+                  placeholder={t("new_password_placeholder")}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
@@ -209,10 +209,10 @@ function Login() {
 
           <button type="submit" className="auth-submit-btn">
             {forgotPassword
-              ? "Parolni yangilash"
+              ? t("reset_password")
               : mode === "login"
               ? t("sign_in")
-              : "Ro'yxatdan o'tish"}
+              : t("register")}
           </button>
 
           {mode === "login" && !forgotPassword && (
@@ -226,7 +226,7 @@ function Login() {
                   setSuccess("");
                 }}
               >
-                Parolni unutdingizmi?
+                {t("forgot_password")}
               </button>
             </div>
           )}
@@ -242,7 +242,7 @@ function Login() {
                   setSuccess("");
                 }}
               >
-                ← Kirish sahifasiga qaytish
+                ← {t("return_to_login")}
               </button>
             </div>
           )}

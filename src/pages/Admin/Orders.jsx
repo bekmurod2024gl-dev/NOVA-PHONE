@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../context/LocaleContext";
 import {
   deleteSalesRecord,
   getSalesRecords,
@@ -37,6 +38,7 @@ function getRealOrders() {
 }
 
 function Orders() {
+  const { t, lang } = useLocale();
   const [orders, setOrders] = useState(() => getRealOrders());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -55,10 +57,11 @@ function Orders() {
     localStorage.setItem("nova_orders_v1", JSON.stringify(orders));
   }, [orders]);
 
-  const formatPrice = (price) => new Intl.NumberFormat("uz-UZ").format(price);
+  const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
+  const formatPrice = (price) => new Intl.NumberFormat(numberLocale).format(price);
 
   const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("uz-UZ", {
+    new Date(dateStr).toLocaleDateString(numberLocale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -74,7 +77,7 @@ function Orders() {
   };
 
   const handleDelete = (id) => {
-    if (!window.confirm("Bu buyurtmani o'chirmoqchimisiz?")) return;
+    if (!window.confirm(t("delete_order_prompt"))) return;
     deleteSalesRecord(id);
     setOrders((prev) => prev.filter((order) => order.id !== id));
   };
@@ -108,12 +111,19 @@ function Orders() {
     }
   };
 
+  const statusLabel = (status) => ({
+    Kutilmoqda: t("in_progress"),
+    Yetkazilmoqda: t("in_transit"),
+    Yetkazildi: t("delivered"),
+    "Bekor qilindi": t("cancelled"),
+  }[status] || status);
+
   return (
     <div className="orders-page">
       <div className="products-header">
         <div>
-          <h1>Mijozlar Buyurtmalari 🛒</h1>
-          <p>Haqiqiy xaridorlar tomonidan rasmiylashtirilgan buyurtmalar nazorati.</p>
+          <h1>{t("orders_admin_title")} 🛒</h1>
+          <p>{t("orders_subtitle")}</p>
         </div>
       </div>
 
@@ -121,7 +131,7 @@ function Orders() {
         <div className="stat-card purple">
           <div className="stat-icon">📦</div>
           <div>
-            <p>Jami buyurtmalar</p>
+            <p>{t("total_orders")}</p>
             <h2>{orders.length}</h2>
           </div>
         </div>
@@ -129,7 +139,7 @@ function Orders() {
         <div className="stat-card orange">
           <div className="stat-icon">🚚</div>
           <div>
-            <p>Jarayonda</p>
+            <p>{t("in_progress")}</p>
             <h2>{pendingCount}</h2>
           </div>
         </div>
@@ -137,7 +147,7 @@ function Orders() {
         <div className="stat-card green">
           <div className="stat-icon">✅</div>
           <div>
-            <p>Yetkazildi</p>
+            <p>{t("delivered")}</p>
             <h2>{deliveredCount}</h2>
           </div>
         </div>
@@ -145,9 +155,9 @@ function Orders() {
         <div className="stat-card blue">
           <div className="stat-icon">💰</div>
           <div>
-            <p>Buyurtmalar summasi</p>
+            <p>{t("order_sum")}</p>
             <h2>{formatPrice(totalSum)}</h2>
-            <span>so'm</span>
+            <span>{t("currency_label")}</span>
           </div>
         </div>
       </div>
@@ -155,7 +165,7 @@ function Orders() {
       <div className="products-toolbar">
         <input
           type="text"
-          placeholder="🔍 Xaridor, telefon yoki telefon modeli bo'yicha qidirish..."
+          placeholder={`🔍 ${t("search_orders")}`}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
@@ -164,10 +174,10 @@ function Orders() {
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value)}
         >
-          <option value="all">Barcha holatlar</option>
+          <option value="all">{t("all_statuses")}</option>
           {STATUS_LIST.map((status) => (
             <option key={status} value={status}>
-              {status}
+              {statusLabel(status)}
             </option>
           ))}
         </select>
@@ -175,12 +185,12 @@ function Orders() {
 
       <div className="orders-list">
         <div className="order-row order-row-head">
-          <span>Xaridor</span>
-          <span>Mahsulot</span>
-          <span>Narxi</span>
-          <span>Buyurtma sanasi</span>
-          <span>Holati</span>
-          <span>Amallar</span>
+          <span>{t("customer")}</span>
+          <span>{t("product")}</span>
+          <span>{t("price")}</span>
+          <span>{t("order_date")}</span>
+          <span>{t("status")}</span>
+          <span>{t("actions")}</span>
         </div>
 
         {filteredOrders.map((order) => (
@@ -201,7 +211,7 @@ function Orders() {
 
             <div className="order-status-cell">
               <span className={`status-badge ${statusClass(order.status)}`}>
-                {order.status}
+                {statusLabel(order.status)}
               </span>
               <select
                 className="status-select"
@@ -210,7 +220,7 @@ function Orders() {
               >
                 {STATUS_LIST.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {statusLabel(status)}
                   </option>
                 ))}
               </select>
@@ -218,7 +228,7 @@ function Orders() {
 
             <div className="order-actions-cell">
               <button className="delete-button" onClick={() => handleDelete(order.id)}>
-                🗑️ O'chirish
+                🗑️ {t("delete")}
               </button>
             </div>
           </div>
@@ -226,8 +236,8 @@ function Orders() {
 
         {filteredOrders.length === 0 && (
           <div className="no-products" style={{ padding: "40px", textAlign: "center" }}>
-            <h2>📦 Hozircha buyurtmalar mavjud emas</h2>
-            <p>Haqiqiy foydalanuvchilar mahsulot sotib olganda, ularning barcha buyurtmalari shu yerda ko'rinadi.</p>
+            <h2>📦 {t("orders_empty")}</h2>
+            <p>{t("empty_order_description")}</p>
           </div>
         )}
       </div>

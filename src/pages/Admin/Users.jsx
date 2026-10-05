@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAccounts, getUserDisplayName } from "../../utils/userStorage";
+import { useLocale } from "../../context/LocaleContext";
 
 const ROLES = ["User", "Manager", "Admin"];
 
@@ -20,6 +21,7 @@ function getDerivedUsers() {
 }
 
 function Users() {
+  const { t } = useLocale();
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem("nova_users_v1");
     const derived = getDerivedUsers();
@@ -85,7 +87,7 @@ function Users() {
     <div className="users-page">
       <div className="products-header">
         <div>
-          <h1>Foydalanuvchilar 👥</h1>
+          <h1>{t("users_title")} 👥</h1>
           <p>Tizimdagi barcha foydalanuvchilarni shu yerda boshqarasiz.</p>
         </div>
       </div>
@@ -206,7 +208,7 @@ function Users() {
 
         {filteredUsers.length === 0 && (
           <div className="no-products">
-            <h2>😔 Foydalanuvchi topilmadi</h2>
+            <h2>😔 {t("user_not_found")}</h2>
             <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
           </div>
         )}

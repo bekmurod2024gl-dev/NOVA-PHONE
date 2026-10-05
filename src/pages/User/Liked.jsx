@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSessionUser, getUserLiked, saveUserLiked } from "../../utils/userStorage";
+import { useLocale } from "../../context/LocaleContext";
 
 // Mahsulotlar ro'yxati (Products.jsx dagi bilan aynan bir xil bo'lishi kerak)
 const HARDCODED_PRODUCTS = [
@@ -42,6 +43,7 @@ const HARDCODED_PRODUCTS = [
 ];
 
 function Liked() {
+  const { t, lang } = useLocale();
   // Mahsulotlar bazasini yuklaymiz
   const [catalog] = useState(HARDCODED_PRODUCTS);
 
@@ -53,7 +55,7 @@ function Liked() {
   }, [liked, currentUser?.id]);
 
 
-  const formatPrice = (price) => new Intl.NumberFormat("uz-UZ").format(price);
+  const formatPrice = (price) => new Intl.NumberFormat(lang === "uz" ? "uz-UZ" : lang === "ru" ? "ru-RU" : "en-US").format(price);
   
   const removeLiked = (id) => {
     setLiked((prev) => prev.filter((f) => f !== id));
@@ -66,15 +68,15 @@ function Liked() {
     <div className="shop-page">
       <div className="products-header">
         <div>
-          <h1>Sevimlilar ❤️</h1>
-          <p>Yoqtirgan mahsulotlaringiz shu yerda saqlanadi. Jami: {likedProducts.length} ta</p>
+          <h1>{t("favorites_title")} ❤️</h1>
+          <p>{t("favorites_subtitle")} {t("product_count")}: {likedProducts.length} {t("item_suffix")}</p>
         </div>
       </div>
 
       {likedProducts.length === 0 ? (
         <div className="no-products">
-          <h2>😔 Hali sevimli mahsulot yo'q</h2>
-          <p>Products bo'limida yoqtirgan telefoningizni ♡ tugmasi bilan belgilang.</p>
+          <h2>😔 {t("favorites_empty_title")}</h2>
+          <p>{t("favorites_empty_text")}</p>
         </div>
       ) : (
         <div className="products-grid">
@@ -113,8 +115,8 @@ function Liked() {
                   </div>
 
                   <div className="price-row">
-                    <del>{formatPrice(oldPrice)} so'm</del>
-                    <h3>{formatPrice(product.price)} so'm</h3>
+                    <del>{formatPrice(oldPrice)} {t("currency_label")}</del>
+                    <h3>{formatPrice(product.price)} {t("currency_label")}</h3>
                   </div>
                 </div>
               </div>

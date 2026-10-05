@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../context/LocaleContext";
 import {
   getAccounts,
   getSessionUser,
@@ -59,6 +60,7 @@ const initialFormState = {
 };
 
 function Employees() {
+  const { t, lang } = useLocale();
   const [activeTab, setActiveTab] = useState("employees"); // "employees" | "applications"
   const [employees, setEmployees] = useState(() => getDerivedEmployees());
   const [applications, setApplications] = useState(() => getJobApplications());
@@ -93,10 +95,11 @@ function Employees() {
     (acc) => !acc.isEmployee && acc.role !== "admin" && !isFakePerson(acc.username)
   );
 
-  const formatSalary = (salary) => new Intl.NumberFormat("uz-UZ").format(salary);
+  const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
+  const formatSalary = (salary) => new Intl.NumberFormat(numberLocale).format(salary);
 
   const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("uz-UZ", {
+    new Date(dateStr).toLocaleDateString(numberLocale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -260,12 +263,12 @@ function Employees() {
     <div className="employees-page">
       <div className="products-header">
         <div>
-          <h1>Xodimlar va Ishga Qabul Qilish 🧑‍💼</h1>
+          <h1>{t("employees_title")} 🧑‍💼</h1>
           <p>Haqiqiy xodimlar va sayt orqali kelib tushgan online arizalarni boshqaring.</p>
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
           <button className="add-product-button" onClick={() => setShowModal(true)}>
-            + Yangi xodim qo'shish
+            + {t("add_employee")}
           </button>
         </div>
       </div>
@@ -286,7 +289,7 @@ function Employees() {
           }}
           onClick={() => setActiveTab("employees")}
         >
-          👥 Faol Xodimlar ({totalEmployees})
+          👥 {t("employees_tab")} ({totalEmployees})
         </button>
         <button
           type="button"
@@ -303,7 +306,7 @@ function Employees() {
           }}
           onClick={() => setActiveTab("applications")}
         >
-          📩 Online Arizalar {pendingApps.length > 0 && `(${pendingApps.length})`}
+          📩 {t("applications_tab")} {pendingApps.length > 0 && `(${pendingApps.length})`}
         </button>
       </div>
 
@@ -313,7 +316,7 @@ function Employees() {
             <div className="stat-card purple">
               <div className="stat-icon">🧑‍💼</div>
               <div>
-                <p>Jami xodimlar</p>
+                <p>{t("employee_count")}</p>
                 <h2>{totalEmployees}</h2>
               </div>
             </div>
@@ -321,7 +324,7 @@ function Employees() {
             <div className="stat-card green">
               <div className="stat-icon">✅</div>
               <div>
-                <p>Ishlamoqda</p>
+                <p>{t("working_status")}</p>
                 <h2>{activeEmployees}</h2>
               </div>
             </div>
@@ -329,7 +332,7 @@ function Employees() {
             <div className="stat-card orange">
               <div className="stat-icon">🌴</div>
               <div>
-                <p>Ta'tilda</p>
+                <p>{t("on_leave")}</p>
                 <h2>{onLeave}</h2>
               </div>
             </div>
@@ -337,9 +340,9 @@ function Employees() {
             <div className="stat-card blue">
               <div className="stat-icon">💵</div>
               <div>
-                <p>Oylik fond</p>
+                <p>{t("total_salary")}</p>
                 <h2>{formatSalary(totalSalary)}</h2>
-                <span>so'm</span>
+                <span>{t("currency_label")}</span>
               </div>
             </div>
           </div>
@@ -367,12 +370,12 @@ function Employees() {
 
           <div className="orders-list">
             <div className="order-row employee-row order-row-head">
-              <span>Xodim</span>
-              <span>Lavozim</span>
-              <span>Oyligi</span>
-              <span>Ishga kirgan</span>
-              <span>Holati</span>
-              <span>Amallar</span>
+              <span>{t("employee")}</span>
+              <span>{t("position")}</span>
+              <span>{t("total_salary")}</span>
+              <span>{t("joined")}</span>
+              <span>{t("status")}</span>
+              <span>{t("actions")}</span>
             </div>
 
             {filteredEmployees.map((employee) => (
@@ -399,13 +402,13 @@ function Employees() {
 
                 <div className="admin-actions">
                   <button className="edit-button" onClick={() => handleEditClick(employee)}>
-                    ✏️ Tahrirlash
+                    ✏️ {t("edit")}
                   </button>
                   <button className="secondary-button" onClick={() => toggleStatus(employee.id)}>
                     🔁 Holat
                   </button>
                   <button className="delete-button" onClick={() => handleDelete(employee.id)}>
-                    🗑️ O'chirish
+                    🗑️ {t("delete")}
                   </button>
                 </div>
               </div>
@@ -413,10 +416,9 @@ function Employees() {
 
             {filteredEmployees.length === 0 && (
               <div className="no-products" style={{ padding: "40px", textAlign: "center" }}>
-                <h2>🧑‍💼 Hozircha xodimlar mavjud emas</h2>
+                <h2>🧑‍💼 {t("employees_empty")}</h2>
                 <p>
-                  Saytdan ro'yxatdan o'tgan foydalanuvchilar online ariza topshirganda yoki siz tomoningizdan
-                  xodim sifatida tayinlanganda shu yerda ko'rinadi.
+                  {t("no_employee_description")}
                 </p>
                 <button
                   type="button"
@@ -424,7 +426,7 @@ function Employees() {
                   style={{ marginTop: "15px" }}
                   onClick={() => setShowModal(true)}
                 >
-                  + Birinchi xodimni tayinlash
+                  + {t("assign_first_employee")}
                 </button>
               </div>
             )}
@@ -472,14 +474,14 @@ function Employees() {
                       style={{ background: "#10b981", borderColor: "#10b981" }}
                       onClick={() => handleApproveApp(app)}
                     >
-                      ✅ Ishga olish
+                      ✅ {t("hire")}
                     </button>
                     <button className="delete-button" onClick={() => handleRejectApp(app.id)}>
-                      ❌ Rad etish
+                      ❌ {t("reject")}
                     </button>
                   </>
                 ) : (
-                  <span style={{ fontSize: "12px", opacity: 0.6 }}>Ko'rib chiqilgan</span>
+                  <span style={{ fontSize: "12px", opacity: 0.6 }}>{t("app_reviewed")}</span>
                 )}
               </div>
             </div>
@@ -487,7 +489,7 @@ function Employees() {
 
           {applications.length === 0 && (
             <div className="no-products" style={{ padding: "40px", textAlign: "center" }}>
-              <h2>📩 Hozircha online arizalar yo'q</h2>
+              <h2>📩 {t("applications_empty")}</h2>
               <p>Mijozlar yoki foydalanuvchilar sayt orqali ishga ariza topshirganda barcha arizalar shu yerga tushadi.</p>
             </div>
           )}
@@ -499,7 +501,7 @@ function Employees() {
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingId ? "Xodimni tahrirlash" : "Yangi xodim qo'shish"}</h2>
+              <h2>{editingId ? t("edit_employee") : t("add_employee")}</h2>
               <button className="modal-close" onClick={handleCloseModal}>
                 ✕
               </button>
@@ -508,12 +510,12 @@ function Employees() {
             <form onSubmit={handleFormSubmit} className="modal-form">
               {!editingId && registeredAccounts.length > 0 && (
                 <div className="form-group" style={{ background: "rgba(99,102,241,0.1)", padding: "12px", borderRadius: "8px" }}>
-                  <label>💡 Ro'yxatdan o'tgan foydalanuvchini tanlash (ixtiyoriy):</label>
+                  <label>💡 {t("select_registered_user")}</label>
                   <select
                     value={formFields.accountId}
                     onChange={(e) => handleSelectRegisteredUser(e.target.value)}
                   >
-                    <option value="">Yangi nom kiritish...</option>
+                    <option value="">{t("enter_new_name")}</option>
                     {registeredAccounts.map((acc) => (
                       <option key={acc.id} value={acc.id}>
                         {acc.firstName || acc.username} ({acc.phone || acc.email})
@@ -524,11 +526,11 @@ function Employees() {
               )}
 
               <div className="form-group">
-                <label>To'liq ism</label>
+                <label>{t("full_name")}</label>
                 <input
                   type="text"
                   name="name"
-                  placeholder="Ism familiyani kiriting"
+                  placeholder={t("full_name_placeholder")}
                   value={formFields.name}
                   onChange={handleInputChange}
                   required
@@ -536,7 +538,7 @@ function Employees() {
               </div>
 
               <div className="form-group">
-                <label>Lavozim</label>
+                <label>{t("position")}</label>
                 <select name="position" value={formFields.position} onChange={handleInputChange}>
                   {POSITIONS.map((position) => (
                     <option key={position} value={position}>
@@ -547,7 +549,7 @@ function Employees() {
               </div>
 
               <div className="form-group">
-                <label>Telefon raqami</label>
+                <label>{t("phone_number")}</label>
                 <input
                   type="text"
                   name="phone"
@@ -559,7 +561,7 @@ function Employees() {
               </div>
 
               <div className="form-group">
-                <label>Oylik maoshi (so'm)</label>
+                <label>{t("salary")} ({t("currency_label")})</label>
                 <input
                   type="number"
                   name="salary"
@@ -571,7 +573,7 @@ function Employees() {
               </div>
 
               <div className="form-group">
-                <label>Ishga qabul qilingan sana</label>
+                <label>{t("joined")}</label>
                 <input
                   type="date"
                   name="hired"
@@ -582,7 +584,7 @@ function Employees() {
               </div>
 
               <div className="form-group">
-                <label>Holati</label>
+                <label>{t("status")}</label>
                 <select name="status" value={formFields.status} onChange={handleInputChange}>
                   {STATUS_LIST.map((status) => (
                     <option key={status} value={status}>
@@ -594,10 +596,10 @@ function Employees() {
 
               <div className="modal-actions">
                 <button type="button" className="cancel-button" onClick={handleCloseModal}>
-                  Bekor qilish
+                  {t("form_cancel")}
                 </button>
                 <button type="submit" className="save-button">
-                  {editingId ? "Saqlash" : "Qo'shish"}
+                  {editingId ? t("save") : t("add_employee")}
                 </button>
               </div>
             </form>

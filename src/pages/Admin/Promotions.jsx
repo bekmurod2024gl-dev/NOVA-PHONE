@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../context/LocaleContext";
 
 const DISCOUNT_TYPES = ["Foizli", "Aniq summa"];
 
@@ -60,6 +61,7 @@ const initialFormState = {
 };
 
 function Promotions() {
+  const { t } = useLocale();
   const [promotions, setPromotions] = useState(() => {
     const saved = localStorage.getItem("nova_promotions_v1");
     return saved ? JSON.parse(saved) : defaultPromotions;
@@ -197,7 +199,7 @@ function Promotions() {
     <div className="promotions-page">
       <div className="products-header">
         <div>
-          <h1>Aksiyalar 🎁</h1>
+          <h1>{t("promotions_title")} 🎁</h1>
           <p>Chegirmalar va promo kodlarni shu yerdan boshqarasiz.</p>
         </div>
         <button className="add-product-button" onClick={() => setShowModal(true)}>
@@ -305,7 +307,7 @@ function Promotions() {
 
         {filteredPromotions.length === 0 && (
           <div className="no-products">
-            <h2>😔 Aksiya topilmadi</h2>
+            <h2>😔 {t("no_promotion")}</h2>
             <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
           </div>
         )}

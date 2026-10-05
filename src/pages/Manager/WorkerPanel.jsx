@@ -1,7 +1,9 @@
 import { useMemo, useState, useEffect } from "react";
 import { getAccounts, isFakePerson, safeParse } from "../../utils/userStorage";
+import { useLocale } from "../../context/LocaleContext";
 
 function WorkerPanel() {
+  const { t, lang } = useLocale();
   const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
@@ -68,11 +70,12 @@ function WorkerPanel() {
   const activeWorkers = workers.filter((worker) => worker.status === "Ishlamoqda").length;
   const totalBonus = workers.reduce((sum, worker) => sum + Number(worker.bonus || 0), 0);
 
-  const formatSalary = (value) => new Intl.NumberFormat("uz-UZ").format(value);
+  const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
+  const formatSalary = (value) => new Intl.NumberFormat(numberLocale).format(value);
 
   const formatDate = (dateStr) => {
     try {
-      return new Date(dateStr).toLocaleDateString("uz-UZ", {
+      return new Date(dateStr).toLocaleDateString(numberLocale, {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -97,7 +100,7 @@ function WorkerPanel() {
     <div className="worker-panel-page">
       <div className="products-header">
         <div>
-          <h1>Ishchilar Ko'rsatkichlari (Xodimlar) 👷‍♂️</h1>
+          <h1>{t("worker_stats")} 👷‍♂️</h1>
           <p>Haqiqiy xodimlar maoshi, davomati va oylik ko'rsatkichlari nazorati.</p>
         </div>
       </div>
@@ -177,7 +180,7 @@ function WorkerPanel() {
 
         {workers.length === 0 && (
           <div className="no-products" style={{ padding: "40px", textAlign: "center" }}>
-            <h2>👷‍♂️ Hozircha xodimlar mavjud emas</h2>
+            <h2>👷‍♂️ {t("workers_empty")}</h2>
             <p>Admin panel orqali ariza topshirgan yangi ishchilar qabul qilinganda shu yerda ko'rinadi.</p>
           </div>
         )}

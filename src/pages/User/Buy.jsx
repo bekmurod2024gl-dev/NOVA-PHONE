@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getSessionUser, getUserPurchases, saveUserPurchases, updateSalesReview } from "../../utils/userStorage";
 import ConfirmModal from "../../components/ConfirmModal";
+import { useLocale } from "../../context/LocaleContext";
 
 const CARD_TYPES = [
   { id: "uzcard", name: "Uzcard", prefix: "8600", icon: "🟢", bg: "linear-gradient(135deg, #059669, #10b981)" },
@@ -39,15 +40,19 @@ const WHEEL_SEGMENTS = [
   { label: "STICKER", color: "#fb7185" },
 ];
 
-function formatPrice(value) {
-  const amount = Number(value);
-  return new Intl.NumberFormat("uz-UZ").format(Number.isFinite(amount) ? amount : 0);
+function localeCode(lang) {
+  return lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
 }
 
-function formatDate(value) {
+function formatPrice(value, lang = "uz") {
+  const amount = Number(value);
+  return new Intl.NumberFormat(localeCode(lang)).format(Number.isFinite(amount) ? amount : 0);
+}
+
+function formatDate(value, lang = "uz") {
   const date = new Date(value);
   if (!value || Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString("uz-UZ", {
+  return date.toLocaleDateString(localeCode(lang), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -64,6 +69,7 @@ function daysUntil(value) {
 }
 
 function Buy() {
+  const { t, lang } = useLocale();
   const currentUser = getSessionUser();
   const [purchases, setPurchases] = useState(() => getUserPurchases(currentUser?.id));
   const [ratingDraft, setRatingDraft] = useState({});
@@ -158,6 +164,13 @@ function Buy() {
         return "";
     }
   };
+
+  const statusLabel = (status) => ({
+    Kutilmoqda: t("in_transit"),
+    Yetkazilmoqda: t("in_transit"),
+    Yetkazildi: t("delivered"),
+    "Bekor qilindi": t("cancelled"),
+  }[status] || status);
 
   const renderStars = (id, current) => {
     const displayed = ratingDraft[id] ?? current;
@@ -283,8 +296,8 @@ function Buy() {
     <div className="orders-page">
       <div className="products-header">
         <div>
-          <h1>Buy — Xaridlarim 🛒</h1>
-          <p>Barcha buyurtmalaringiz, yetkazish sanasi va holati shu yerda.</p>
+          <h1>{t("orders_title")} 🛒</h1>
+          <p>{t("orders_subtitle")}</p>
         </div>
       </div>
 
@@ -292,7 +305,7 @@ function Buy() {
         <div className="stat-card blue">
           <div className="stat-icon">🚚</div>
           <div>
-            <p>Yo'lda</p>
+              <p>{t("in_transit")}</p>
             <h2>{activeCount}</h2>
           </div>
         </div>
@@ -300,7 +313,7 @@ function Buy() {
         <div className="stat-card green">
           <div className="stat-icon">✅</div>
           <div>
-            <p>Yetkazildi</p>
+              <p>{t("delivered")}</p>
             <h2>{deliveredCount}</h2>
           </div>
         </div>
@@ -308,7 +321,7 @@ function Buy() {
         <div className="stat-card orange">
           <div className="stat-icon">✕</div>
           <div>
-            <p>Bekor qilingan</p>
+              <p>{t("cancelled")}</p>
             <h2>{cancelledCount}</h2>
           </div>
         </div>
@@ -332,7 +345,7 @@ function Buy() {
             boxShadow: "0 15px 35px rgba(0,0,0,0.3)",
           }}
         >
-          <h3 style={{ marginTop: 0, marginBottom: 16 }}>💳 Karta orqali to'lov</h3>
+          <h3 style={{ marginTop: 0, marginBottom: 16 }}>💳 {t("card_payment")}</h3>
 
           {/* VIRTUAL CARD PREVIEW */}
           {(() => {
@@ -364,11 +377,11 @@ function Buy() {
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, textTransform: "uppercase", opacity: 0.9 }}>
                   <div>
-                    <div style={{ fontSize: 9, opacity: 0.75 }}>KARTA EGASI</div>
+                    <div style={{ fontSize: 9, opacity: 0.75 }}>{t("card_holder_preview")}</div>
                     <div style={{ fontWeight: 600 }}>{paymentForm.cardHolder || "ISM FAMILIYA"}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 9, opacity: 0.75 }}>MUDDATI</div>
+                    <div style={{ fontSize: 9, opacity: 0.75 }}>{t("expiry_label")}</div>
                     <div style={{ fontWeight: 600 }}>{paymentForm.expiry || "MM/YY"}</div>
                   </div>
                 </div>
@@ -415,7 +428,7 @@ function Buy() {
               name="cardHolder"
               type="text"
               autoComplete="cc-name"
-              placeholder="Karta egasi (Masalan: BOBOMUROD JUMABOYEV)"
+              placeholder={t("card_holder_placeholder")}
               value={paymentForm.cardHolder}
               onChange={(event) => setPaymentForm((prev) => ({ ...prev, cardHolder: event.target.value.toUpperCase() }))}
               style={{ padding: 11, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14 }}
@@ -427,7 +440,7 @@ function Buy() {
               type="text"
               inputMode="numeric"
               autoComplete="cc-number"
-              placeholder="16 xonali karta raqami (8600 / 9860 / 4... / 5...)"
+              placeholder={t("card_number_placeholder")}
               value={paymentForm.cardNumber}
               onChange={handleCardNumberChange}
               style={{ padding: 11, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, fontFamily: "monospace" }}
@@ -439,7 +452,7 @@ function Buy() {
                 name="expiry"
                 type="text"
                 autoComplete="cc-exp"
-                placeholder="Amal qilish muddati (MM/YY)"
+                placeholder={t("expiry_placeholder")}
                 value={paymentForm.expiry}
                 onChange={handleExpiryChange}
                 maxLength={5}
@@ -451,7 +464,7 @@ function Buy() {
                 name="cvv"
                 type="password"
                 autoComplete="cc-csc"
-                placeholder="CVV / CVC (3 xonali)"
+                placeholder={t("cvv_placeholder")}
                 value={paymentForm.cvv}
                 onChange={handleCvvChange}
                 maxLength={4}
@@ -466,35 +479,35 @@ function Buy() {
                 name="promoCode"
                 type="text"
                 autoComplete="off"
-                placeholder="Promokod (masalan: NOVA10, WELCOME5)"
+                placeholder={t("promo_placeholder")}
                 value={promoInput}
                 onChange={(event) => setPromoInput(event.target.value)}
                 style={{ flex: 1, padding: 10, borderRadius: 10, border: "1px solid #334155", background: "#0f172a", color: "#fff" }}
               />
               <button type="button" className="secondary-button" onClick={applyPromoCode}>
-                Qo'llash
+                {t("apply")}
               </button>
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#cbd5e1" }}>
-              <span>Mahsulotlar summasi</span>
-              <strong>{formatPrice(subtotal)} so'm</strong>
+              <span>{t("subtotal")}</span>
+              <strong>{formatPrice(subtotal, lang)} {t("currency_label")}</strong>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#cbd5e1" }}>
-              <span>Chegirma</span>
-              <strong>-{formatPrice(subtotal * discountRate)} so'm</strong>
+              <span>{t("discount")}</span>
+              <strong>-{formatPrice(subtotal * discountRate, lang)} {t("currency_label")}</strong>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#cbd5e1" }}>
-              <span>Yetkazib berish</span>
-              <strong>{formatPrice(shippingCost)} so'm</strong>
+              <span>{t("shipping")}</span>
+              <strong>{formatPrice(shippingCost, lang)} {t("currency_label")}</strong>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 18, fontWeight: 700, color: "#fff", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 10 }}>
-              <span>Jami to'lov</span>
-              <span style={{ color: "#38bdf8" }}>{formatPrice(total)} so'm</span>
+              <span>{t("total_payment")}</span>
+              <span style={{ color: "#38bdf8" }}>{formatPrice(total, lang)} {t("currency_label")}</span>
             </div>
 
             <button type="submit" className="shop-buy-btn" style={{ marginTop: 8 }}>
-              💳 To'lovni tasdiqlash
+              💳 {t("confirm_payment")}
             </button>
             {paymentMessage && (
               <p style={{ margin: "4px 0 0", color: paymentMessage.includes("✅") ? "#34d399" : "#f87171", fontSize: 13.5, fontWeight: 500 }}>
@@ -513,17 +526,17 @@ function Buy() {
             color: "#e2e8f0",
           }}
         >
-          <h3 style={{ marginTop: 0 }}>🎵 Bonus mini-o'yin</h3>
+          <h3 style={{ marginTop: 0 }}>🎵 {t("bonus_game")}</h3>
           <p style={{ marginTop: 0, color: "#cbd5e1", fontSize: 13 }}>
-            Bu bonus va sovg'a mini-o'yini bo'lib, qimor emas. Faqat chegirma va sovg'a tanlash uchun ishlatiladi.
+            {t("bonus_description")}
           </p>
 
           <div style={{ display: "grid", gap: 12 }}>
             <button type="button" className="admin-save-button" onClick={playDrumGame}>
-              🥁 Barabanni aylantirish
+              🥁 {t("drum_spin")}
             </button>
             <button type="button" className="secondary-button" onClick={spinLuckyBonus}>
-              🎰 Lucky bonus aylantirish
+              🎰 {t("lucky_spin")}
             </button>
 
             <div
@@ -690,7 +703,7 @@ function Buy() {
                 color: "#dbeafe",
               }}
             >
-              <strong>{drumBeat || "Sovg'a halqasi tayyorlanmoqda..."}</strong>
+              <strong>{drumBeat || t("wheel_ready")}</strong>
             </div>
 
             <div
@@ -703,7 +716,7 @@ function Buy() {
                 fontWeight: 600,
               }}
             >
-              {bonusPrize}
+              {bonusPrize === "Sovg'a tayyorlanmoqda..." ? t("gift_ready") : bonusPrize}
             </div>
 
             {gameMessage && <p style={{ margin: 0, color: "#fcd34d" }}>{gameMessage}</p>}
@@ -713,8 +726,8 @@ function Buy() {
 
       {purchases.length === 0 ? (
         <div className="no-products">
-          <h2>😔 Hali xarid yo'q</h2>
-          <p>Products bo'limidan telefon tanlab, "Buy" tugmasini bosing!</p>
+          <h2>😔 {t("no_orders")}</h2>
+          <p>{t("no_orders_hint")}</p>
         </div>
       ) : (
         <div className="my-orders-list">
@@ -731,29 +744,29 @@ function Buy() {
                 <div className="my-order-info">
                   <h4>{purchase.productName}</h4>
                   <p>
-                    {formatPrice(purchase.price)} so'm · Buyurtma: {formatDate(purchase.orderDate)}
+                    {formatPrice(purchase.price, lang)} {t("currency_label")} · {t("order_label")}: {formatDate(purchase.orderDate, lang)}
                   </p>
 
                   {purchase.status === "Yetkazilmoqda" && (
                     <p className="delivery-eta">
-                      📦 Yetkazilish sanasi: <strong>{formatDate(purchase.deliveryDate)}</strong>{" "}
-                      {remaining > 0 ? `(${remaining} kun qoldi)` : "(bugun-erta)"}
+                      📦 {t("delivery_date")}: <strong>{formatDate(purchase.deliveryDate, lang)}</strong>{" "}
+                      {remaining > 0 ? `(${remaining} ${t("days_left")})` : `(${t("today_tomorrow")})`}
                     </p>
                   )}
 
                   <span className={`status-badge ${statusClass(purchase.status)}`}>
-                    {purchase.status}
+                    {statusLabel(purchase.status)}
                   </span>
                 </div>
 
                 <div className="my-order-rating">
                   {purchase.status === "Yetkazilmoqda" || purchase.status === "Kutilmoqda" ? (
                     <button className="delete-button" onClick={() => openCancelModal(purchase)}>
-                      ✕ Bekor qilish
+                      ✕ {t("cancel_order")}
                     </button>
                   ) : purchase.status === "Bekor qilindi" ? (
                     <button className="delete-button" onClick={() => openDeleteModal(purchase)}>
-                      🗑️ Ro'yxatdan o'chirish
+                      🗑️ {t("remove_order")}
                     </button>
                   ) : purchase.myRating > 0 ? (
                     <div className="my-rating-done">
@@ -761,24 +774,24 @@ function Buy() {
                         {"★".repeat(purchase.myRating)}
                         {"☆".repeat(5 - purchase.myRating)}
                       </span>
-                      <p>{purchase.satisfaction === "Norozi" ? "😞 Norozi" : purchase.satisfaction === "Neytral" ? "😐 Neytral" : "😊 Mamnun"}</p>
+                      <p>{purchase.satisfaction === "Norozi" ? `😞 ${t("unsatisfied")}` : purchase.satisfaction === "Neytral" ? `😐 ${t("neutral")}` : `😊 ${t("satisfied")}`}</p>
                     </div>
                   ) : (
                     <div>
-                      <p className="rate-label">Mahsulotni baholang:</p>
+                      <p className="rate-label">{t("review_product")}</p>
                       <select
                         className="status-select"
                         value={satisfactionDraft[purchase.id] ?? purchase.satisfaction ?? "Mamnun"}
                         onChange={(event) => setSatisfactionDraft((prev) => ({ ...prev, [purchase.id]: event.target.value }))}
                         style={{ marginBottom: 8 }}
                       >
-                        <option value="Mamnun">😊 Mamnun</option>
-                        <option value="Neytral">😐 Neytral</option>
-                        <option value="Norozi">😞 Norozi</option>
+                        <option value="Mamnun">😊 {t("satisfied")}</option>
+                        <option value="Neytral">😐 {t("neutral")}</option>
+                        <option value="Norozi">😞 {t("unsatisfied")}</option>
                       </select>
                       {renderStars(purchase.id, purchase.myRating)}
                       <button className="edit-button" onClick={() => submitRating(purchase.id)}>
-                        Baholash
+                        {t("rate")}
                       </button>
                     </div>
                   )}
@@ -794,10 +807,10 @@ function Buy() {
         isOpen={cancelModal.isOpen}
         onClose={() => setCancelModal({ isOpen: false, purchaseId: null, productName: "" })}
         onConfirm={confirmCancel}
-        title="Buyurtmani bekor qilish"
-        message={`"${cancelModal.productName}" buyurtmasini bekor qilmoqchimisiz? Ushbu amalni ortga qaytarib bo'lmaydi.`}
-        confirmText="Ha, bekor qilish"
-        cancelText="Yo'q, qolsin"
+        title={t("cancel_order_title")}
+        message={t("cancel_order_message").replace("{product}", cancelModal.productName)}
+        confirmText={t("confirm_cancel")}
+        cancelText={t("keep_order")}
         type="danger"
         icon="⚠️"
       />
@@ -806,10 +819,10 @@ function Buy() {
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, purchaseId: null, productName: "" })}
         onConfirm={confirmDelete}
-        title="Ro'yxatdan o'chirish"
-        message={`"${deleteModal.productName}" buyurtmasini tarixdan butunlay o'chirmoqchimisiz?`}
-        confirmText="Ha, o'chirish"
-        cancelText="Qaytish"
+        title={t("delete_order_title")}
+        message={t("delete_order_message").replace("{product}", deleteModal.productName)}
+        confirmText={t("yes_delete")}
+        cancelText={t("back")}
         type="danger"
         icon="🗑️"
       />

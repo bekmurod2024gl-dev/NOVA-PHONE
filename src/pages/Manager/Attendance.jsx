@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../context/LocaleContext";
 
 const defaultAttendance = [
   {
@@ -59,6 +60,7 @@ const defaultAttendance = [
 ];
 
 function Attendance() {
+  const { t } = useLocale();
   const [attendance, setAttendance] = useState(() => {
     const saved = localStorage.getItem("nova_attendance_v1");
     return saved ? JSON.parse(saved) : defaultAttendance;
@@ -103,7 +105,7 @@ function Attendance() {
     <div className="orders-page">
       <div className="products-header">
         <div>
-          <h1>Xodimlar davomati 🧑‍💼</h1>
+          <h1>{t("attendance_title")} 🧑‍💼</h1>
           <p>Bugungi kelish-ketish va faollikni shu yerdan kuzating.</p>
         </div>
       </div>
@@ -199,7 +201,7 @@ function Attendance() {
 
         {filtered.length === 0 && (
           <div className="no-products">
-            <h2>😔 Xodim topilmadi</h2>
+            <h2>😔 {t("worker_not_found")}</h2>
             <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
           </div>
         )}

@@ -135,15 +135,15 @@ function Products() {
     <div className="shop-page">
       <div className="products-header">
         <div>
-          <h1>Mahsulotlar 📱</h1>
-          <p>Yoqtirgan telefoningizni tanlang va buyurtma bering. Jami: {catalog.length} ta</p>
+          <h1>{t("products_title")}</h1>
+          <p>{t("products_sub")} {t("product_count")}: {catalog.length} {t("item_suffix")}</p>
         </div>
       </div>
 
       <div className="products-toolbar">
-        <input type="text" placeholder="🔍 Telefon yoki brend qidirish..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input type="text" placeholder={t("search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} />
         <select value={brandFilter} onChange={(e) => setBrandFilter(e.target.value)}>
-          <option value="all">Barcha brendlar</option>
+          <option value="all">{t("all_brands")}</option>
           {BRANDS.map((brand) => (<option key={brand} value={brand}>{brand}</option>))}
         </select>
       </div>

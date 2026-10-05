@@ -71,7 +71,7 @@ function AdminConfirm() {
               style={{ flex: 1, background: "rgba(255,255,255,0.08)", color: "#fff" }}
               onClick={handleBack}
             >
-              Orqaga
+              {t("back")}
             </button>
           </div>
         </form>

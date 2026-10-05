@@ -48,15 +48,15 @@ function ManagerConfirm() {
     <div className="login-page admin-confirm-page">
       <div className="login-card">
         <div className="brand">🔐</div>
-        <h1>{t("manager_confirm_title") || "Manager tasdiqlash"}</h1>
-        <p className="login-subtitle">{t("manager_confirm_sub") || "Manager parolini kiriting"}</p>
+        <h1>{t("manager_confirm_title")}</h1>
+        <p className="login-subtitle">{t("manager_confirm_sub")}</p>
 
         <form onSubmit={handleSubmit}>
           <div className="input-group">
             <label>{t("password")}</label>
             <input
               type="password"
-              placeholder={t("password") + " kiriting"}
+              placeholder={t("password_placeholder")}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
@@ -65,13 +65,13 @@ function ManagerConfirm() {
           {error && <p className="error-message">{error}</p>}
 
           <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-            <button type="submit" style={{ flex: 1 }}>{t("confirm") || "Tasdiqlash"}</button>
+            <button type="submit" style={{ flex: 1 }}>{t("confirm")}</button>
             <button
               type="button"
               style={{ flex: 1, background: "rgba(255,255,255,0.08)", color: "#fff" }}
               onClick={handleBack}
             >
-              Orqaga
+              {t("back")}
             </button>
           </div>
         </form>

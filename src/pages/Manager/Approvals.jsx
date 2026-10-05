@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../context/LocaleContext";
 
 const defaultOrders = [
   {
@@ -49,6 +50,7 @@ const defaultOrders = [
 ];
 
 function Approvals() {
+  const { t, lang } = useLocale();
   const [orders, setOrders] = useState(() => {
     const saved = localStorage.getItem("nova_approvals_v1");
     return saved ? JSON.parse(saved) : defaultOrders;
@@ -61,7 +63,7 @@ function Approvals() {
     localStorage.setItem("nova_approvals_v1", JSON.stringify(orders));
   }, [orders]);
 
-  const formatSum = (value) => new Intl.NumberFormat("uz-UZ").format(value);
+  const formatSum = (value) => new Intl.NumberFormat(lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ").format(value);
 
   const handleApprove = (id) => {
     setOrders((prev) =>
@@ -103,7 +105,7 @@ function Approvals() {
     <div className="orders-page">
       <div className="products-header">
         <div>
-          <h1>Tasdiqlash 🔔</h1>
+          <h1>{t("approvals_title")} 🔔</h1>
           <p>Buyurtmalarni ko'rib chiqing, tasdiqlang yoki rad eting.</p>
         </div>
       </div>
@@ -196,7 +198,7 @@ function Approvals() {
 
         {filtered.length === 0 && (
           <div className="no-products">
-            <h2>😔 Buyurtma topilmadi</h2>
+            <h2>😔 {t("order_not_found")}</h2>
             <p>Qidiruv yoki filterni o'zgartirib ko'ring.</p>
           </div>
         )}

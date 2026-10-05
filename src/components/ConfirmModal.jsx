@@ -1,17 +1,20 @@
 import { useEffect } from "react";
+import { useLocale } from "../context/LocaleContext";
 import "./ConfirmModal.css";
 
 export default function ConfirmModal({
   isOpen,
   onClose,
   onConfirm,
-  title = "Tasdiqlash",
-  message = "Haqiqatan ham ushbu amalni bajarmoqchimisiz?",
-  confirmText = "Tasdiqlash",
-  cancelText = "Bekor qilish",
+  title,
+  message,
+  confirmText,
+  cancelText,
   type = "danger", // "danger" | "warning" | "info"
   icon = "⚠️",
 }) {
+  const { t } = useLocale();
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -34,8 +37,8 @@ export default function ConfirmModal({
           <span>{icon}</span>
         </div>
 
-        <h3 className="nova-modal-title">{title}</h3>
-        <p className="nova-modal-message">{message}</p>
+        <h3 className="nova-modal-title">{title || t("confirm")}</h3>
+        <p className="nova-modal-message">{message || t("confirm_message_default")}</p>
 
         <div className="nova-modal-actions">
           <button
@@ -43,7 +46,7 @@ export default function ConfirmModal({
             className="nova-modal-btn nova-modal-btn-cancel"
             onClick={onClose}
           >
-            {cancelText}
+            {cancelText || t("form_cancel")}
           </button>
           <button
             type="button"
@@ -53,7 +56,7 @@ export default function ConfirmModal({
               onClose();
             }}
           >
-            {confirmText}
+            {confirmText || t("confirm")}
           </button>
         </div>
       </div>

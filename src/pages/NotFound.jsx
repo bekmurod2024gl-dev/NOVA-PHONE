@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 
+import { useLocale } from "../context/LocaleContext";
+
 function NotFound() {
+  const { t } = useLocale();
   return (
     <div className="login-page">
       <div className="login-card" style={{ maxWidth: 520, textAlign: "center" }}>
         <div className="brand" style={{ fontSize: "3rem" }}>404</div>
-        <h1>Sahifa topilmadi</h1>
+        <h1>{t("not_found_title")}</h1>
         <p className="login-subtitle">
           Siz izlayotgan sahifa mavjud emas yoki ko'chirilgan. Asosiy sahifaga qaytib kiring.
         </p>

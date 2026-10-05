@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSessionUser, setSessionUser } from "../../utils/userStorage";
+import { useLocale } from "../../context/LocaleContext";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: "👤" },
@@ -62,6 +63,7 @@ function ToggleSwitch({ checked, onChange }) {
 }
 
 function Settings() {
+  const { t } = useLocale();
   const [activeTab, setActiveTab] = useState("profile");
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem("nova_settings_v1");
@@ -143,7 +145,7 @@ function Settings() {
     <div className="settings-page">
       <div className="products-header">
         <div>
-          <h1>Sozlamalar ⚙️</h1>
+          <h1>{t("settings_title")} ⚙️</h1>
           <p>Tizim, do'kon va profil sozlamalarini shu yerdan boshqaring.</p>
         </div>
       </div>
@@ -157,7 +159,7 @@ function Settings() {
               onClick={() => setActiveTab(tab.id)}
               type="button"
             >
-              <span>{tab.icon}</span> {tab.label}
+              <span>{tab.icon}</span> {t(`tab_${tab.id}`)}
             </button>
           ))}
         </div>

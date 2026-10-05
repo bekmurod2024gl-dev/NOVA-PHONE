@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../context/LocaleContext";
 
 const defaultDamaged = [
   {
@@ -20,6 +21,7 @@ const defaultDamaged = [
 const initialForm = { name: "", reason: "", loss: "", date: "" };
 
 function DamagedItems() {
+  const { t, lang } = useLocale();
   const [items, setItems] = useState(() => {
     const saved = localStorage.getItem("nova_damaged_v1");
     return saved ? JSON.parse(saved) : defaultDamaged;
@@ -33,9 +35,10 @@ function DamagedItems() {
     localStorage.setItem("nova_damaged_v1", JSON.stringify(items));
   }, [items]);
 
-  const formatSum = (value) => new Intl.NumberFormat("uz-UZ").format(value);
+  const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
+  const formatSum = (value) => new Intl.NumberFormat(numberLocale).format(value);
   const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit", year: "numeric" });
+    new Date(dateStr).toLocaleDateString(numberLocale, { day: "2-digit", month: "2-digit", year: "numeric" });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -73,7 +76,7 @@ function DamagedItems() {
     <div className="orders-page">
       <div className="products-header">
         <div>
-          <h1>Buzilgan / singan mahsulotlar 🔧</h1>
+          <h1>{t("damaged_title")} 🔧</h1>
           <p>Zararlangan mahsulotlar va yo'qotilgan summani shu yerdan kuzating.</p>
         </div>
         <button className="add-product-button" onClick={() => setShowModal(true)}>
@@ -132,7 +135,7 @@ function DamagedItems() {
 
         {filtered.length === 0 && (
           <div className="no-products">
-            <h2>😔 Yozuv topilmadi</h2>
+            <h2>😔 {t("no_damage_records")}</h2>
             <p>Qidiruvni o'zgartirib ko'ring.</p>
           </div>
         )}
@@ -142,7 +145,7 @@ function DamagedItems() {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Yangi zarar yozuvi</h2>
+              <h2>{t("add_damage_record")}</h2>
               <button onClick={() => setShowModal(false)}>✕</button>
             </div>
 

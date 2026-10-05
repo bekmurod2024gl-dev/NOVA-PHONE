@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getCompletedSalesRecords, getSalesRecords, isFakePerson } from "../../utils/userStorage";
+import { useLocale } from "../../context/LocaleContext";
 
 const chartData = {
   7: {
@@ -32,6 +33,7 @@ const brandBreakdown = [
 ];
 
 function Analytics() {
+  const { t, lang } = useLocale();
   const [chartPeriod, setChartPeriod] = useState("7");
   const currentChart = chartData[chartPeriod];
 
@@ -61,13 +63,13 @@ function Analytics() {
     ? new Intl.NumberFormat("uz-UZ").format(totalRevenue) + " so'm"
     : "0 so'm";
 
-  const formatSum = (value) => new Intl.NumberFormat("uz-UZ").format(value);
+  const formatSum = (value) => new Intl.NumberFormat(lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ").format(value);
 
   return (
     <div className="analytics-page">
       <div className="products-header">
         <div>
-          <h1>Tahlil 📊</h1>
+          <h1>{t("analytics_title")} 📊</h1>
           <p>Do'kon faoliyati bo'yicha umumiy statistik ko'rinish.</p>
         </div>
       </div>
@@ -76,7 +78,7 @@ function Analytics() {
         <div className="stat-card purple">
           <div className="stat-icon">💰</div>
           <div>
-            <p>Umumiy tushum</p>
+            <p>{t("revenue")}</p>
             <h2>{formattedRevenue}</h2>
             <span>haqiqiy savdo ko'rsatkichi</span>
           </div>
@@ -85,7 +87,7 @@ function Analytics() {
         <div className="stat-card blue">
           <div className="stat-icon">🧾</div>
           <div>
-            <p>O'rtacha chek</p>
+            <p>{t("average_check")}</p>
             <h2>{formatSum(avgCheck)} so'm</h2>
             <span>bir xarid uchun o'rtacha</span>
           </div>
@@ -94,7 +96,7 @@ function Analytics() {
         <div className="stat-card green">
           <div className="stat-icon">📦</div>
           <div>
-            <p>Sotilgan mahsulotlar</p>
+            <p>{t("sold_products")}</p>
             <h2>{totalOrders} ta</h2>
             <span>jami buyurtmalar soni</span>
           </div>
@@ -103,7 +105,7 @@ function Analytics() {
         <div className="stat-card orange">
           <div className="stat-icon">😊</div>
           <div>
-            <p>Mijozlar mamnunligi</p>
+            <p>{t("satisfaction")}</p>
             <h2>98%</h2>
             <span>ijobiy sharhlar</span>
           </div>
@@ -114,7 +116,7 @@ function Analytics() {
       <div className="dashboard-grid">
         <div className="chart-card">
           <div className="card-header">
-            <h2>Savdo dinamikasi</h2>
+            <h2>{t("sales_dynamics")}</h2>
             <select value={chartPeriod} onChange={(event) => setChartPeriod(event.target.value)}>
               <option value="7">Oxirgi 7 kun</option>
               <option value="30">Oxirgi 30 kun</option>
@@ -139,7 +141,7 @@ function Analytics() {
 
         <div className="recent-orders">
           <div className="card-header">
-            <h2>Brendlar ulushi</h2>
+            <h2>{t("brand_share")}</h2>
           </div>
 
           <div className="brand-breakdown">
@@ -162,7 +164,7 @@ function Analytics() {
       </div>
 
       <div className="warehouse-section">
-        <h2 className="section-title">Eng ko'p sotilgan mahsulotlar</h2>
+        <h2 className="section-title">{t("top_selling")}</h2>
 
         <div className="orders-list">
           <div className="order-row top-product-row order-row-head">

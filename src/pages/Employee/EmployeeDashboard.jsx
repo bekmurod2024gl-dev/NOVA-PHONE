@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getSessionUser, getAccounts, safeParse } from "../../utils/userStorage";
+import { useLocale } from "../../context/LocaleContext";
 
 export default function EmployeeDashboard() {
+  const { t, lang } = useLocale();
   const [currentUser, setCurrentUser] = useState(() => getSessionUser());
   const [shiftActive, setShiftActive] = useState(() => {
     return localStorage.getItem("nova_employee_shift") === "true";
@@ -60,14 +62,15 @@ export default function EmployeeDashboard() {
     }, 2000);
   };
 
-  const formatPrice = (p) => new Intl.NumberFormat("uz-UZ").format(p);
+  const numberLocale = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
+  const formatPrice = (p) => new Intl.NumberFormat(numberLocale).format(p);
 
   return (
     <div className="employee-dashboard" style={{ padding: "10px", display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* HEADER */}
       <div className="products-header">
         <div>
-          <h1>Ishchi Kabineti 🧑‍💼</h1>
+          <h1>{t("employee_dashboard_title")} 🧑‍💼</h1>
           <p>Xush kelibsiz, <strong>{employeeName}</strong>! Sizning shaxsiy ish kabinetingiz va ko'rsatkichlaringiz.</p>
         </div>
         <div>
@@ -250,7 +253,7 @@ export default function EmployeeDashboard() {
         <div className="modal-overlay" onClick={() => setVacationModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>🌴 Ta'til yoki Dam olish so'rovi</h2>
+              <h2>🌴 {t("time_off_request")}</h2>
               <button className="modal-close" onClick={() => setVacationModal(false)}>✕</button>
             </div>
             {vacationSent ? (

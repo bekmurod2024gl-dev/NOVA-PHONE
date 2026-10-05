@@ -25,7 +25,7 @@ function UserLayout() {
           </div>
           <div>
             <h2>NOVA PHONE</h2>
-            <span>Online Do'kon</span>
+            <span>{t("online_store")}</span>
           </div>
         </div>
 
@@ -37,19 +37,19 @@ function UserLayout() {
         {/* MENYULAR */}
         <nav className="user-sidebar-menu">
           <NavLink to="/user" className="user-menu-link" end>
-            <span>📊</span> Bosh sahifa
+            <span>📊</span> {t("nav_home")}
           </NavLink>
 
-          <p className="user-menu-title">BO'LIMLAR</p>
+          <p className="user-menu-title">{t("sections")}</p>
 
           <NavLink to="/user/products" className="user-menu-link">
-            <span>📱</span> Mahsulotlar
+            <span>📱</span> {t("nav_products_user")}
           </NavLink>
           <NavLink to="/user/liked" className="user-menu-link">
-            <span>❤️</span> Sevimlilar
+            <span>❤️</span> {t("nav_favorites")}
           </NavLink>
           <NavLink to="/user/buy" className="user-menu-link">
-            <span>🛒</span> Savatcha
+            <span>🛒</span> {t("nav_cart")}
           </NavLink>
         </nav>
 
@@ -58,7 +58,7 @@ function UserLayout() {
           <div className="profile-avatar">🙂</div>
           <div className="profile-info">
             <strong>{displayName}</strong>
-            <span>Mijoz</span>
+            <span>{t("customer_role")}</span>
           </div>
         </div>
 
